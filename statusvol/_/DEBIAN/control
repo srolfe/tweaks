@@ -1,0 +1,10 @@
+Package: com.chewmieser.statusvol
+Name: statusvol
+Depends: mobilesubstrate
+Architecture: iphoneos-arm
+Description: Places the volume HUD in the statusbar
+Maintainer: Steven Rolfe
+Author: Steven Rolfe
+Section: Tweaks
+Version: 0.0.1-282
+Installed-Size: 176

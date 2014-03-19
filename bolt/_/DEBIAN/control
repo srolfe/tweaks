@@ -1,0 +1,10 @@
+Package: com.chewmieser.bolt
+Name: bolt
+Depends: mobilesubstrate
+Architecture: iphoneos-arm
+Description: Removes battery icon
+Maintainer: Steven Rolfe
+Author: Steven Rolfe
+Section: Tweaks
+Version: 0.0.1-24
+Installed-Size: 88
