@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Appearance</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvol.prefs-changed</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvol</string>
+			<key>key</key>
+			<string>statusvol.enabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSegmentCell</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvol.prefs-changed</string>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvol</string>
+			<key>validValues</key>
+			<array>
+				<string>square</string>
+				<string>circle</string>
+			</array>
+			<key>validTitles</key>
+			<array>
+				<string>Square</string>
+				<string>Circle</string>
+			</array>
+			<key>default</key>
+			<string>circle</string>
+			<key>key</key>
+			<string>statusvol.shape</string>
+			<key>label</key>
+			<string>Shape</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>StatusVol</string>
+</dict>
+</plist>

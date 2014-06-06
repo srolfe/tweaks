@@ -4,6 +4,10 @@
 
 @interface statusvol : NSObject
 	- (void)didReceiveNotification:(NSNotification *)notification;
+	- (void)loadPrefs;
+	- (BOOL)isEnabled;
+	- (BOOL)isCircle;
+	@property (nonatomic,retain) NSDictionary *prefs;
 @end
 
 // Time cloaking functionality
