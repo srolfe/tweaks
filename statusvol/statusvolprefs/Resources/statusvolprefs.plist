@@ -7,8 +7,6 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Appearance</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -26,27 +24,25 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSSegmentCell</string>
+			<string>PSTitleValueCell</string>
+			<key>label</key>
+			<string>Off Transparency</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
 			<key>PostNotification</key>
 			<string>com.chewmieser.statusvol.prefs-changed</string>
+			<key>default</key>
+			<real>0.25</real>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvol</string>
-			<key>validValues</key>
-			<array>
-				<string>square</string>
-				<string>circle</string>
-			</array>
-			<key>validTitles</key>
-			<array>
-				<string>Square</string>
-				<string>Circle</string>
-			</array>
-			<key>default</key>
-			<string>circle</string>
 			<key>key</key>
-			<string>statusvol.shape</string>
-			<key>label</key>
-			<string>Shape</string>
+			<string>statusvol.offTrans</string>
+			<key>min</key>
+			<string>0.00</string>
+			<key>max</key>
+			<string>0.99</string>
 		</dict>
 	</array>
 	<key>title</key>

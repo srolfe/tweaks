@@ -2,11 +2,17 @@
 #import <substrate.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface statusvol : NSObject
+@interface statusvol : NSObject{
+	id _MI;
+	id _MOI;
+}
+	- (float)offTransparency;
+	- (id)maskedImage;
+	- (id)maskedOffImage;
 	- (void)didReceiveNotification:(NSNotification *)notification;
 	- (void)loadPrefs;
 	- (BOOL)isEnabled;
-	- (BOOL)isCircle;
+	- (BOOL)isMasked;
 	@property (nonatomic,retain) NSDictionary *prefs;
 @end
 

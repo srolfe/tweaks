@@ -115,21 +115,27 @@ UIColor *statusStyle;
 	- (void)_updateBlockView:(UIView *)arg1 value:(float)arg2 blockSize:(struct CGSize)arg3 point:(struct CGPoint)arg4{
 		if ([svol isEnabled]){
 			for (UIView *tmp in arg1.subviews){
-			
-				if ([svol isCircle]){
-					tmp.layer.masksToBounds=YES;
-					tmp.layer.cornerRadius=2.75;
-				}
-			
+				// Fix the frame, giving the indicator icons more space
 				tmp.frame=CGRectMake(tmp.frame.origin.x,tmp.frame.origin.y,5.5,5.5);
-			
-				CGFloat white;
-				[statusStyle getWhite:&white alpha:nil];
-		
-				UIColor *t = [UIColor colorWithWhite:white alpha:1.0];
-			
-				tmp.layer.borderColor=[t CGColor];
-				tmp.layer.borderWidth=0.5;
+				
+				// Mask
+				if ([svol isMasked]){
+					CALayer *mask=[[CALayer alloc] init];
+					mask.frame=tmp.layer.bounds;
+					
+					if (CGColorGetAlpha(tmp.layer.backgroundColor)<1.0){
+						[mask setContents:[svol maskedOffImage]];
+					}else{
+						[mask setContents:[svol maskedImage]];
+					}
+					
+					[tmp.layer setMask:mask];
+				}
+				
+				// Show hidden indicators
+				if (CGColorGetAlpha(tmp.layer.backgroundColor)<1.0){
+					[tmp.layer setBackgroundColor:CGColorCreateCopyWithAlpha(tmp.layer.backgroundColor,[svol offTransparency])];
+				}
 			}
 		}
 		
@@ -155,14 +161,47 @@ UIColor *statusStyle;
 	
 	- (void)loadPrefs{
 		prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.chewmieser.statusvol.plist"];
+		_MI=nil;
+		_MOI=nil;
+	}
+	
+	- (float)offTransparency{
+		if (![[self prefs] objectForKey:@"statusvol.offTrans"]){
+			return 0.25;
+		}else{
+			return [(NSNumber *)[[self prefs] objectForKey:@"statusvol.offTrans"] floatValue];
+		}
 	}
 	
 	- (BOOL)isEnabled{
 		return ([[self prefs] objectForKey:@"statusvol.enabled"]==nil || [[[self prefs] objectForKey:@"statusvol.enabled"] intValue]==YES);
 	}
 	
-	- (BOOL)isCircle{
-		return (![[self prefs] objectForKey:@"statusvol.shape"] || [[[self prefs] objectForKey:@"statusvol.shape"] isEqualToString:@"circle"]);
+	- (BOOL)isMasked{
+		// No mask key OR mask key == none
+		if ([[self prefs] objectForKey:@"statusvol.mask"] && ![[[self prefs] objectForKey:@"statusvol.mask"] isEqualToString:@"none"]){
+			return YES;
+		}else{
+			return NO;
+		}
+	}
+	
+	// On mask
+	- (id)maskedImage{
+		if (_MI==nil){
+			_MI=(id)[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/on.png",[[self prefs] objectForKey:@"statusvol.mask"]]].CGImage;
+		}
+		
+		return _MI;
+	}
+	
+	// Off mask
+	- (id)maskedOffImage{
+		if (_MOI==nil){
+			_MOI=(id)[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/off.png",[[self prefs] objectForKey:@"statusvol.mask"]]].CGImage;
+		}
+		
+		return _MOI;
 	}
 	
 @end

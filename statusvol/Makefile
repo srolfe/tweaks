@@ -5,10 +5,14 @@ include theos/makefiles/common.mk
 TWEAK_NAME = statusvol statusvolKit
 statusvol_FILES = statusvol.xm
 statusvolKit_FILES = statusvolKit.xm
-statusvol_FRAMEWORKS = UIKit
+statusvol_FRAMEWORKS = UIKit QuartzCore CoreGraphics
 statusvolKit_FRAMEWORKS = UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
+
+internal-stage::
+	$(ECHO_NOTHING)mkdir -p $(THEOS_STAGING_DIR)/var/mobile/Documents/StatusVol$(ECHO_END)
+	$(ECHO_NOTHING)cp -r skins/* $(THEOS_STAGING_DIR)/var/mobile/Documents/StatusVol/$(ECHO_END)
 
 after-install::
 	install.exec "killall -9 SpringBoard"
