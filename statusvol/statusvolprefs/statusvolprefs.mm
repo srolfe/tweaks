@@ -72,30 +72,31 @@ enum cType{
 		NSMutableArray *arr=[NSMutableArray arrayWithArray:_specifiers];
 		
 		// Create our skin group
-		PSSpecifier* groupSpecifier = [PSSpecifier groupSpecifierWithName:@"Mask"];
+		PSSpecifier* groupSpecifier = [PSSpecifier groupSpecifierWithName:@"Theme"];
 		[groupSpecifier setProperty:NSTrue forKey:@"isRadioGroup"];
-		[groupSpecifier setProperty:@"Skins located in /var/mobile/Documents/StatusVol" forKey:@"footerText"];
+		[groupSpecifier setProperty:@"Skins located in /Library/StatusVol" forKey:@"footerText"];
 		[arr addObject:groupSpecifier];
 		
 		// Create default option
-		PSSpecifier *spec=[PSSpecifier preferenceSpecifierNamed:@"Default" target:self set:nil get:nil detail:nil cell:PSListItemCell edit:nil];
+		/*PSSpecifier *spec=[PSSpecifier preferenceSpecifierNamed:@"Default" target:self set:nil get:nil detail:nil cell:PSListItemCell edit:nil];
 		[spec setProperty:@"none" forKey:@"value"];
-		[arr addObject:spec];
+		[arr addObject:spec];*/
 		
 		// Find skins
-		NSArray *directoryContent = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/var/mobile/Documents/StatusVol" error:NULL];
+		NSArray *directoryContent = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/Library/StatusVol" error:NULL];
 		
-		int i=1;
+		int i=0;
 		for (NSString *tmp in directoryContent){
 			// Setup skin specifier
-			PSSpecifier *tmpSpec=[PSSpecifier preferenceSpecifierNamed:[tmp stringByDeletingPathExtension] target:self set:nil get:nil detail:nil cell:PSListItemCell edit:nil];
+			PSSpecifier *tmpSpec=[PSSpecifier preferenceSpecifierNamed:tmp target:self set:nil get:nil detail:nil cell:PSListItemCell edit:nil];
 			[tmpSpec setProperty:tmp forKey:@"value"];
+			[tmpSpec setProperty:[NSNumber numberWithInteger:3] forKey:@"alignment"];
 			
 			// If selected, record it
 			if ([tmp isEqualToString:selectedId]) selected=i;
 			
 			// Load skin images
-			UIImage *on=[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/on.png",tmp]];
+			/*UIImage *on=[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/on.png",tmp]];
 			UIImage *off=[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/off.png",tmp]];
 			
 			// Combine skin images
@@ -104,15 +105,20 @@ enum cType{
 			[on drawInRect:CGRectMake(0,0,on.size.width,on.size.height)];
 			[off drawInRect:CGRectMake(on.size.width,on.size.height,off.size.width,off.size.height)];
 			UIImage *iconImage=UIGraphicsGetImageFromCurrentImageContext();
-			UIGraphicsEndImageContext();
+			UIGraphicsEndImageContext();*/
 			
 			// Show skin in icon
-			[tmpSpec setProperty:iconImage forKey:@"iconImage"];
+			[tmpSpec setProperty:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/Library/StatusVol/%@/dark/8.png",tmp]] forKey:@"iconImage"];
 			
 			// Add specifier to array
 			[arr addObject:tmpSpec];
 			
 			i++;
+		}
+		
+		if (i==0){
+			PSSpecifier *noSkins=[PSSpecifier preferenceSpecifierNamed:@"No skins found :(" target:self set:nil get:nil detail:nil cell:PSTitleValueCell edit:nil];
+			[arr addObject:noSkins];
 		}
 		
 		_specifiers=[arr copy];

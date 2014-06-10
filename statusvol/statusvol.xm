@@ -113,7 +113,35 @@ UIColor *statusStyle;
 	}
 	
 	- (void)_updateBlockView:(UIView *)arg1 value:(float)arg2 blockSize:(struct CGSize)arg3 point:(struct CGPoint)arg4{
+		// Full theme support
 		if ([svol isEnabled]){
+			// Figure out current step
+			int currentStep=(int)([self progress]*16);
+			
+			[arg1 setFrame:CGRectMake(arg1.frame.origin.x, arg1.frame.origin.y, arg1.frame.size.width, 20.0)];
+			//[arg1 setBounds:CGRectMake(0,0, arg1.frame.size.width, 20.0)];
+			CGFloat white;
+			[statusStyle getWhite:&white alpha:nil];
+			
+			UIImage *volImage;
+			if (white>0.5){
+				volImage=[svol imageForState:currentStep withMode:@"light"];
+			}else{
+				volImage=[svol imageForState:currentStep withMode:@"dark"];
+			}
+			
+			[arg1.layer setContentsGravity:kCAGravityResizeAspect];//kCAGravityResizeAspectFill];
+			[arg1.layer setContents:(id)volImage.CGImage];
+			[arg1.layer setAnchorPoint:CGPointMake(0.5,0.8)];
+			
+			//[arg1.layer setBackgroundColor:CGColorCreateCopyWithAlpha(arg1.layer.backgroundColor,0.00)];
+			for (UIView *tmp in arg1.subviews){
+				[tmp.layer setBackgroundColor:CGColorCreateCopyWithAlpha(arg1.layer.backgroundColor,0.00)];
+			}
+		}
+		
+		// Masking version
+		/*if ([svol isEnabled]){
 			for (UIView *tmp in arg1.subviews){
 				// Fix the frame, giving the indicator icons more space
 				tmp.frame=CGRectMake(tmp.frame.origin.x,tmp.frame.origin.y,5.5,5.5);
@@ -137,7 +165,7 @@ UIColor *statusStyle;
 					[tmp.layer setBackgroundColor:CGColorCreateCopyWithAlpha(tmp.layer.backgroundColor,[svol offTransparency])];
 				}
 			}
-		}
+		}*/
 		
 		%orig(arg1,arg2,arg3,arg4);
 	}
@@ -145,36 +173,62 @@ UIColor *statusStyle;
 %end
 
 @implementation statusvol
-	@synthesize prefs;
+	@synthesize prefs, skin;
 	
 	- (id)init{
 		if (self=[super init]){
+			// Setup skin store
+			self.skin=[[NSDictionary alloc] initWithObjectsAndKeys:[[NSMutableDictionary alloc] init],@"light",[[NSMutableDictionary alloc] init],@"dark",nil];
+			
+			// Load our preferences
 			[self loadPrefs];
 		}
 		
 		return self;
 	}
 	
+	// Did receive white color
 	- (void)didReceiveNotification:(NSNotification *)notification{
 		statusStyle=[notification object];
 	}
 	
+	// Did receive preference reload notification
 	- (void)loadPrefs{
+		[[self prefs] release];
+		[[self skin] release];
+		
 		prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.chewmieser.statusvol.plist"];
-		_MI=nil;
-		_MOI=nil;
+		self.skin=[[NSDictionary alloc] initWithObjectsAndKeys:[[NSMutableDictionary alloc] init],@"light",[[NSMutableDictionary alloc] init],@"dark",nil];
 	}
 	
+	// Is StatusVol enabled?
+	- (BOOL)isEnabled{
+		return ([[self prefs] objectForKey:@"statusvol.enabled"]==nil || [[[self prefs] objectForKey:@"statusvol.enabled"] intValue]==YES);
+	}
+	
+	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode{
+		// Default on circled
+		NSString *skinName=[[self prefs] objectForKey:@"statusvol.mask"];
+		if (skinName==nil) skinName=@"circled";
+		
+		// If the image isn't cached, cache it
+		if ([(NSMutableDictionary *)[[self skin] objectForKey:mode] objectForKey:[@(state) stringValue]] == nil){
+			if ([[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithFormat:@"/Library/StatusVol/%@/%@/%d.png",skinName,mode,state]] || [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithFormat:@"/Library/StatusVol/%@/%@/%d@2x.png",skinName,mode,state]]){
+				[(NSMutableDictionary *)[[self skin] objectForKey:mode] setObject:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/Library/StatusVol/%@/%@/%d.png",skinName,mode,state]] forKey:[@(state) stringValue]];
+			}
+		}
+		
+		return (UIImage *)[[[self skin] objectForKey:mode] objectForKey:[@(state) stringValue]];
+	
+	}
+	
+	/*
 	- (float)offTransparency{
 		if (![[self prefs] objectForKey:@"statusvol.offTrans"]){
 			return 0.25;
 		}else{
 			return [(NSNumber *)[[self prefs] objectForKey:@"statusvol.offTrans"] floatValue];
 		}
-	}
-	
-	- (BOOL)isEnabled{
-		return ([[self prefs] objectForKey:@"statusvol.enabled"]==nil || [[[self prefs] objectForKey:@"statusvol.enabled"] intValue]==YES);
 	}
 	
 	- (BOOL)isMasked{
@@ -203,6 +257,7 @@ UIColor *statusStyle;
 		
 		return _MOI;
 	}
+	*/
 	
 @end
 

@@ -11,8 +11,8 @@ statusvolKit_FRAMEWORKS = UIKit
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 internal-stage::
-	$(ECHO_NOTHING)mkdir -p $(THEOS_STAGING_DIR)/var/mobile/Documents/StatusVol$(ECHO_END)
-	$(ECHO_NOTHING)cp -r skins/* $(THEOS_STAGING_DIR)/var/mobile/Documents/StatusVol/$(ECHO_END)
+	$(ECHO_NOTHING)mkdir -p $(THEOS_STAGING_DIR)/Library/StatusVol$(ECHO_END)
+	$(ECHO_NOTHING)cp -r skins/* $(THEOS_STAGING_DIR)/Library/StatusVol/$(ECHO_END)
 
 after-install::
 	install.exec "killall -9 SpringBoard"

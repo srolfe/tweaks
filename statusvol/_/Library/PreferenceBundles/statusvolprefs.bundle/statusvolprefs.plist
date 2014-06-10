@@ -22,28 +22,6 @@
 			<key>label</key>
 			<string>Enabled</string>
 		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSTitleValueCell</string>
-			<key>label</key>
-			<string>Off Transparency</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>PostNotification</key>
-			<string>com.chewmieser.statusvol.prefs-changed</string>
-			<key>default</key>
-			<real>0.25</real>
-			<key>defaults</key>
-			<string>com.chewmieser.statusvol</string>
-			<key>key</key>
-			<string>statusvol.offTrans</string>
-			<key>min</key>
-			<string>0.00</string>
-			<key>max</key>
-			<string>0.99</string>
-		</dict>
 	</array>
 	<key>title</key>
 	<string>StatusVol</string>

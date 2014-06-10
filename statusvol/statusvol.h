@@ -3,17 +3,23 @@
 #import <QuartzCore/QuartzCore.h>
 
 @interface statusvol : NSObject{
-	id _MI;
-	id _MOI;
+	//id _MI;
+	//id _MOI;
+	
+	// Image storage...
+	// Light: 0..16
+	// Dark: 0..16
 }
-	- (float)offTransparency;
-	- (id)maskedImage;
-	- (id)maskedOffImage;
+	//- (float)offTransparency;
+	//- (id)maskedImage;
+	//- (id)maskedOffImage;
+	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode;
 	- (void)didReceiveNotification:(NSNotification *)notification;
 	- (void)loadPrefs;
 	- (BOOL)isEnabled;
-	- (BOOL)isMasked;
+	//- (BOOL)isMasked;
 	@property (nonatomic,retain) NSDictionary *prefs;
+	@property (nonatomic,retain) NSDictionary *skin;
 @end
 
 // Time cloaking functionality
@@ -29,4 +35,7 @@
 @end
 	
 @interface SBHUDView : UIView
+	@property(nonatomic) float progress; // @synthesize progress=_progress;
+	@property(nonatomic) _Bool showsProgress; // @synthesize showsProgress=_showsProgress;
+	@property(nonatomic) int level; // @synthesize level=_level;
 @end
