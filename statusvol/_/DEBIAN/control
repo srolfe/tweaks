@@ -6,5 +6,6 @@ Description: Places the volume HUD in the statusbar
 Maintainer: Steven Rolfe
 Author: Steven Rolfe
 Section: Tweaks
-Version: 0.0.3-86
+Depiction: http://apt.steverolfe.com/depiction/statusvol.html
+Version: 0.1.0-1
 Installed-Size: 3084
