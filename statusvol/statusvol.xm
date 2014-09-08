@@ -33,7 +33,7 @@ UIColor *statusStyle;
 	
 	// Show time on tear down
 	- (void)_tearDown{
-		if ([svol isEnabled]){
+		if ([svol isEnabled] && [svol timeTeardownEnabled]){
 			[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:YES crossfade:NO crossfadeDuration:0];
 		}
 	
@@ -63,7 +63,9 @@ UIColor *statusStyle;
 			tmp.frame=[self calculateFrame:tmp.frame];
 		
 			// Hide time
-			[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:NO crossfade:NO crossfadeDuration:0];
+			if ([svol timeTeardownEnabled]){
+				[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:NO crossfade:NO crossfadeDuration:0];
+			}	
 		}
 		
 		// Return view
@@ -119,7 +121,7 @@ UIColor *statusStyle;
 			int currentStep=(int)([self progress]*16);
 			
 			[arg1 setFrame:CGRectMake(arg1.frame.origin.x, arg1.frame.origin.y, arg1.frame.size.width, 20.0)];
-			//[arg1 setBounds:CGRectMake(0,0, arg1.frame.size.width, 20.0)];
+			
 			CGFloat white;
 			[statusStyle getWhite:&white alpha:nil];
 			
@@ -134,38 +136,10 @@ UIColor *statusStyle;
 			[arg1.layer setContents:(id)volImage.CGImage];
 			[arg1.layer setAnchorPoint:CGPointMake(0.5,0.8)];
 			
-			//[arg1.layer setBackgroundColor:CGColorCreateCopyWithAlpha(arg1.layer.backgroundColor,0.00)];
 			for (UIView *tmp in arg1.subviews){
 				[tmp.layer setBackgroundColor:CGColorCreateCopyWithAlpha(arg1.layer.backgroundColor,0.00)];
 			}
 		}
-		
-		// Masking version
-		/*if ([svol isEnabled]){
-			for (UIView *tmp in arg1.subviews){
-				// Fix the frame, giving the indicator icons more space
-				tmp.frame=CGRectMake(tmp.frame.origin.x,tmp.frame.origin.y,5.5,5.5);
-				
-				// Mask
-				if ([svol isMasked]){
-					CALayer *mask=[[CALayer alloc] init];
-					mask.frame=tmp.layer.bounds;
-					
-					if (CGColorGetAlpha(tmp.layer.backgroundColor)<1.0){
-						[mask setContents:[svol maskedOffImage]];
-					}else{
-						[mask setContents:[svol maskedImage]];
-					}
-					
-					[tmp.layer setMask:mask];
-				}
-				
-				// Show hidden indicators
-				if (CGColorGetAlpha(tmp.layer.backgroundColor)<1.0){
-					[tmp.layer setBackgroundColor:CGColorCreateCopyWithAlpha(tmp.layer.backgroundColor,[svol offTransparency])];
-				}
-			}
-		}*/
 		
 		%orig(arg1,arg2,arg3,arg4);
 	}
@@ -206,6 +180,10 @@ UIColor *statusStyle;
 		return ([[self prefs] objectForKey:@"statusvol.enabled"]==nil || [[[self prefs] objectForKey:@"statusvol.enabled"] intValue]==YES);
 	}
 	
+	- (BOOL)timeTeardownEnabled{
+		return ([[self prefs] objectForKey:@"statusvol.timeEnabled"]==nil || [[[self prefs] objectForKey:@"statusvol.timeEnabled"] intValue]==YES);
+	}
+	
 	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode{
 		// Default on circled
 		NSString *skinName=[[self prefs] objectForKey:@"statusvol.mask"];
@@ -221,43 +199,6 @@ UIColor *statusStyle;
 		return (UIImage *)[[[self skin] objectForKey:mode] objectForKey:[@(state) stringValue]];
 	
 	}
-	
-	/*
-	- (float)offTransparency{
-		if (![[self prefs] objectForKey:@"statusvol.offTrans"]){
-			return 0.25;
-		}else{
-			return [(NSNumber *)[[self prefs] objectForKey:@"statusvol.offTrans"] floatValue];
-		}
-	}
-	
-	- (BOOL)isMasked{
-		// No mask key OR mask key == none
-		if ([[self prefs] objectForKey:@"statusvol.mask"] && ![[[self prefs] objectForKey:@"statusvol.mask"] isEqualToString:@"none"]){
-			return YES;
-		}else{
-			return NO;
-		}
-	}
-	
-	// On mask
-	- (id)maskedImage{
-		if (_MI==nil){
-			_MI=(id)[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/on.png",[[self prefs] objectForKey:@"statusvol.mask"]]].CGImage;
-		}
-		
-		return _MI;
-	}
-	
-	// Off mask
-	- (id)maskedOffImage{
-		if (_MOI==nil){
-			_MOI=(id)[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Documents/StatusVol/%@/off.png",[[self prefs] objectForKey:@"statusvol.mask"]]].CGImage;
-		}
-		
-		return _MOI;
-	}
-	*/
 	
 @end
 
