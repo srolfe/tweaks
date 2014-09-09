@@ -53,6 +53,15 @@ UIColor *statusStyle;
 		
 			// Subview manipulation
 			for (id t in tmp.subviews){
+				// Disable motion effect?
+				if ([t respondsToSelector:@selector(removeMotionEffect:)]){
+					UIView *tView=(UIView *)t;
+					
+					for (UIMotionEffect *mo in tView.motionEffects){
+						[tView removeMotionEffect:mo];
+					}
+				}
+				
 				// Remove backdrop, if available
 				if ([NSStringFromClass([t class]) isEqualToString:@"_UIBackdropView"]){
 					[t removeFromSuperview];
@@ -200,10 +209,22 @@ UIColor *statusStyle;
 	
 	}
 	
+	- (void)didUpdateColor:(UIColor *)color{
+		statusStyle=color;
+	}
+	
 @end
 
 static void PreferencesChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
 	[svol loadPrefs];
+}
+
+static void GotWhite(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
+	[svol didUpdateColor:[UIColor whiteColor]];
+}
+
+static void GotBlack(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
+	[svol didUpdateColor:[UIColor blackColor]];
 }
 	
 __attribute__((constructor)) static void init() {
@@ -211,4 +232,8 @@ __attribute__((constructor)) static void init() {
 	[[NSNotificationCenter defaultCenter] addObserver:svol selector:@selector(didReceiveNotification:) name:@"statusvol_NNC" object:nil];
 	
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvol.prefs-changed"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	
+	// Handle color events
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotWhite, CFSTR("com.chewmieser.statusvol.gotWhite"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotBlack, CFSTR("com.chewmieser.statusvol.gotBlack"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 }
