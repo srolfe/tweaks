@@ -2,6 +2,10 @@
 #import <substrate.h>
 #import <QuartzCore/QuartzCore.h>
 
+@interface UIView (additions)
+- (void)_removeAllAnimations:(BOOL)arg1;
+@end
+
 // StatusVol Object
 @interface statusvol : NSObject
 	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode;

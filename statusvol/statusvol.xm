@@ -1,4 +1,5 @@
 #import "statusvol.h"
+#import <QuartzCore/QuartzCore.h>
 
 statusvol *svol;
 UIInterfaceOrientation orient;
@@ -18,8 +19,29 @@ UIColor *statusStyle;
 %hook SBHUDController
 	
 	// Modify HUD view on presentation
-	- (void)presentHUDView:(id)arg1 autoDismissWithDelay:(double)arg2{ if ([svol isEnabled]){%orig([self modifyHUD:arg1], arg2);}else{%orig;} }
-	- (void)presentHUDView:(id)arg1{ if ([svol isEnabled]){%orig([self modifyHUD:arg1]);}else{%orig;} }
+	- (void)presentHUDView:(id)arg1 autoDismissWithDelay:(double)arg2{
+		if ([svol isEnabled]){
+			%orig([self modifyHUD:arg1], arg2);
+			
+			// Disable parallax - 7.1 fix
+			UIView *parallax=MSHookIvar<UIView *>(self,"_hudContentView");
+			for (UIMotionEffect *mo in parallax.motionEffects){
+				[parallax removeMotionEffect:mo];
+			}
+		}else{%orig;}
+	}
+	
+	- (void)presentHUDView:(id)arg1{
+		if ([svol isEnabled]){
+			%orig([self modifyHUD:arg1]);
+			
+			// Disable Parallax - 7.1 fix
+			UIView *parallax=MSHookIvar<UIView *>(self,"_hudContentView");
+			for (UIMotionEffect *mo in parallax.motionEffects){
+				[parallax removeMotionEffect:mo];
+			}
+		}else{%orig;}
+	}
 	
 	// Manually re-center HUD view
 	- (void)_recenterHUDView{
