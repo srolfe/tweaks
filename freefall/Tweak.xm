@@ -2,35 +2,45 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 SystemSoundID soundID;
+CMMotionManager *manager;
+bool playing;
 
 %hook SpringBoard
 	
 	// Setup FreeFall
-	- (void)applicationDidFinishLaunching:(id)application{
+	-(void)applicationDidFinishLaunching:(id)application{
 		%orig;
 		
-		// Setup sound, save for later
+		// Setup sound
 		NSBundle *bundle=[[[NSBundle alloc] initWithPath:@"/Library/MobileSubstrate/DynamicLibraries/FreeFallBundle.bundle"] autorelease];
-		NSString *soundPath=[bundle pathForResource:@"falling" ofType:@"wav"];
+		NSString *soundPath=[bundle pathForResource:@"WilhelmScream" ofType:@"wav"];
 		AudioServicesCreateSystemSoundID((CFURLRef)[NSURL fileURLWithPath: soundPath],&soundID);
 		
-		CMMotionManager *mMan=[[CMMotionManager alloc] init];
+		// Setup CoreMotion
+		manager=[[CMMotionManager alloc] init];
+		manager.accelerometerUpdateInterval=0.01;
+		[manager startAccelerometerUpdates];
 		
-		// Accelerometer available - start polling
-		if (mMan.accelerometerAvailable){
-			
-			mMan.accelerometerUpdateInterval=1.0/10.0;
-			
-			[mMan startDeviceMotionUpdatesToQueue:[[NSOperationQueue alloc] init] withHandler:^(CMDeviceMotion *data, NSError *error){
-				dispatch_async(dispatch_get_main_queue(),^{
-					double accel=sqrt(pow(data.gravity.x-data.userAcceleration.x,2) + pow(data.gravity.y-data.userAcceleration.y,2) + pow(data.gravity.z-data.userAcceleration.z,2));
-					
-					if (accel>6.0){ // Original was 8.0
-						AudioServicesPlaySystemSound(soundID);
-					}
-				});
-			}];
+		playing=NO;
+		
+		// Setup timer
+		[NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateAccelData:) userInfo:nil repeats:YES];
+	}
+	
+	%new(v:@)
+	-(void)updateAccelData:(NSTimer *)timer{
+		double accel=sqrt(pow(manager.accelerometerData.acceleration.x,2) + pow(manager.accelerometerData.acceleration.y,2) + pow(manager.accelerometerData.acceleration.z,2));
+		
+		if (accel<0.04 && !playing){ // Original was 8.0
+			playing=YES;
+			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopPlay:) userInfo:nil repeats:YES];
+			AudioServicesPlaySystemSound(soundID);
 		}
+	}
+	
+	%new(v:@)
+	-(void)doStopPlay:(NSTimer *)timer{
+		playing=NO;
 	}
 	
 %end
