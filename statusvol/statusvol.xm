@@ -241,6 +241,7 @@ static void PreferencesChanged(CFNotificationCenterRef center, void *observer, C
 	[svol loadPrefs];
 }
 
+// Only way to reliably get these messages...
 static void GotWhite(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
 	[svol didUpdateColor:[UIColor whiteColor]];
 }
@@ -248,11 +249,13 @@ static void GotWhite(CFNotificationCenterRef center, void *observer, CFStringRef
 static void GotBlack(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
 	[svol didUpdateColor:[UIColor blackColor]];
 }
-	
+
+// Set things up	
 __attribute__((constructor)) static void init() {
 	svol=[[statusvol alloc] init];
 	[[NSNotificationCenter defaultCenter] addObserver:svol selector:@selector(didReceiveNotification:) name:@"statusvol_NNC" object:nil];
 	
+	// Handle preference changes
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvol.prefs-changed"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	
 	// Handle color events
