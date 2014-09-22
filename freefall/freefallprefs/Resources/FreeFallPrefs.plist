@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Sounds located in /Library/FreeFall</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>WilhelmScream.wav</string>
+			<key>defaults</key>
+			<string>com.chewmieser.freefall</string>
+			<key>key</key>
+			<string>fallingSound</string>
+			<key>label</key>
+			<string>Falling Sound</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>valuesDataSource</key>
+			<string>getValues:</string>
+			<key>titlesDataSource</key>
+			<string>getValues:</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.freefall.prefs-changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>None</string>
+			<key>defaults</key>
+			<string>com.chewmieser.freefall</string>
+			<key>key</key>
+			<string>stoppingSound</string>
+			<key>label</key>
+			<string>Stopping Sound</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>valuesDataSource</key>
+			<string>getValues:</string>
+			<key>titlesDataSource</key>
+			<string>getValues:</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.freefall.prefs-changed</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>FreeFallPrefs</string>
+</dict>
+</plist>

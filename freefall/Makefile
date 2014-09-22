@@ -8,10 +8,11 @@ FreeFall_FRAMEWORKS = CoreMotion AudioToolbox
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-BUNDLE_NAME = FreeFallBundle
-FreeFallBundle_INSTALL_PATH = /Library/Application Support
-
-include $(THEOS)/makefiles/bundle.mk
+internal-stage::
+	$(ECHO_NOTHING)mkdir -p $(THEOS_STAGING_DIR)/Library/FreeFall$(ECHO_END)
+	$(ECHO_NOTHING)cp -r resources/* $(THEOS_STAGING_DIR)/Library/FreeFall/$(ECHO_END)
 
 after-install::
 	install.exec "killall -9 SpringBoard"
+SUBPROJECTS += freefallprefs
+include $(THEOS_MAKE_PATH)/aggregate.mk
