@@ -1,0 +1,10 @@
+{
+    entry = {
+	bundle = FreeFallSettings;
+	cell = PSLinkCell;
+	detail = FreeFallSettingsListController;
+	icon = FreeFallSettings.png;
+	isController = 1;
+	label = FreeFall;
+    };
+}

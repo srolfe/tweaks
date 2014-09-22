@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>FreeFall</string>
+		</dict>
+		
+		<dict>
+     	   <key>cell</key>
+        	<string>PSSwitchCell</string>
+        	<key>key</key>
+        	<string>enabled</string>
+        	<key>label</key>
+        	<string>Enabled</string>
+        	<key>default</key>
+        	<true/>
+    	    <key>defaults</key>
+	  		<string>com.chewmieser.freefall</string>
+	  		<key>PostNotification</key>
+     		<string>com.chewmieser.freefall/prefsChanged</string>
+    	</dict>
+		
+    	<dict>
+     	   <key>cell</key>
+        	<string>PSLinkListCell</string>
+        	<key>key</key>
+        	<string>screamSound</string>
+        	<key>label</key>
+        	<string>Scream Sound</string>
+        	<key>detail</key>
+        	<string>PSListItemsController</string>
+        	<key>validTitles</key>
+        	<array>
+    			<string>Wilhelm Scream</string>
+            	<string>"Falling" Scream</string>
+        	</array>
+        	<key>validValues</key>
+        	<array>
+            	<string>WilhelmScream</string>
+            	<string>falling</string>
+        	</array>
+        	<key>default</key>
+        	<string>WilhelmScream</string>
+    	    <key>defaults</key>
+	  		<string>com.chewmieser.freefall</string>
+        	<key>PostNotification</key>
+        	<string>com.chewmieser.freefall/prefsChanged-sound</string>
+        	<key>staticTextMessage</key>
+        	<string>Selecting a new sound will play that sound</string>
+    	</dict>
+	</array>
+	
+	<key>title</key>
+	<string>FreeFall</string>
+</dict>
+</plist>
