@@ -1,4 +1,7 @@
-export ARCHS = armv7 armv7s arm64
+TARGET = iphone:latest:7.1
+ARCHS = armv7 arm64
+THEOS_BUILD_DIR = Packages
+SDKVERSION = 7.1
 
 include theos/makefiles/common.mk
 
@@ -15,3 +18,5 @@ include $(THEOS)/makefiles/bundle.mk
 
 after-install::
 	install.exec "killall -9 SpringBoard"
+SUBPROJECTS += freefallsettings
+include $(THEOS_MAKE_PATH)/aggregate.mk
