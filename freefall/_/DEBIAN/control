@@ -6,5 +6,6 @@ Description: Phone screams when dropped
 Maintainer: Steven Rolfe
 Author: Steven Rolfe
 Section: Tweaks
-Version: 1.6-1
+Depiction: http://apt.steverolfe.com/depiction/freefall.html
+Version: 1.6-2
 Installed-Size: 680
