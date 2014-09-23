@@ -3,7 +3,7 @@ include theos/makefiles/common.mk
 BUNDLE_NAME = FreeFallPrefs
 FreeFallPrefs_FILES = FreeFallPrefs.mm
 FreeFallPrefs_INSTALL_PATH = /Library/PreferenceBundles
-FreeFallPrefs_FRAMEWORKS = UIKit
+FreeFallPrefs_FRAMEWORKS = UIKit AudioToolbox
 FreeFallPrefs_PRIVATE_FRAMEWORKS = Preferences
 
 include $(THEOS_MAKE_PATH)/bundle.mk

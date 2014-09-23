@@ -29,6 +29,8 @@
 			<string>getValues:</string>
 			<key>PostNotification</key>
 			<string>com.chewmieser.freefall.prefs-changed</string>
+			<key>set</key>
+			<string>previewAndSet:forSpecifier:</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -49,6 +51,8 @@
 			<string>getValues:</string>
 			<key>PostNotification</key>
 			<string>com.chewmieser.freefall.prefs-changed</string>
+			<key>set</key>
+			<string>previewAndSet:forSpecifier:</string>
 		</dict>
 	</array>
 	<key>title</key>

@@ -90,8 +90,6 @@ FreeFall *freeFallController;
 	
 @end
 	
-	
-	
 static void PreferencesChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
 	[freeFallController loadPrefs];
 }
