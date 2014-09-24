@@ -1,10 +1,11 @@
 #import <CoreMotion/CoreMotion.h>
 #import <AudioToolbox/AudioToolbox.h>
+#import <notify.h>
 #import "FreeFall.h"
 
 // Reference to our FreeFall object
 FreeFall *freeFallController;
-	
+
 @implementation FreeFall
 	@synthesize prefs;
 	
@@ -12,6 +13,11 @@ FreeFall *freeFallController;
 		if (self=[super init]){
 			// Load our preferences
 			[self loadPrefs];
+			
+			// Thanks Ryan Pendleton for silent state code
+			notify_register_dispatch("com.apple.springboard.ringerstate", &_ringerStateToken, dispatch_get_main_queue(), ^(int token) {
+				[self updateState];
+			});
 		}
 		
 		return self;
@@ -20,8 +26,6 @@ FreeFall *freeFallController;
 	// Did receive preference reload notification
 	- (void)loadPrefs{
 		if (prefs) [[self prefs] release];
-		if (timed) [timed invalidate];
-		if (manager) [manager stopAccelerometerUpdates];
 		
 		AudioServicesDisposeSystemSoundID(fallingSound);
 		AudioServicesDisposeSystemSoundID(stoppingSound);
@@ -44,8 +48,17 @@ FreeFall *freeFallController;
 			AudioServicesCreateSystemSoundID((CFURLRef)[NSURL fileURLWithPath:[NSString stringWithFormat:@"/Library/FreeFall/%@",stopPref]],&stoppingSound);
 		}
 		
+		[self updateState];
+	}
+	
+	- (void)updateState{
+		if (_freeFallExecuteTimer!=nil){[_freeFallExecuteTimer invalidate]; _freeFallExecuteTimer=nil;}
+		if (manager) [manager stopAccelerometerUpdates];
+		
+		uint64_t state;
+		
 		// Are we completely disabled?
-		if (fallingSound!=0 || stoppingSound!=0){
+		if ((fallingSound!=0 || stoppingSound!=0) && (notify_get_state(_ringerStateToken, &state)==NOTIFY_STATUS_OK && state==1)){
 			// Control variables
 			fallSoundPlaying=NO;
 			stopSoundPlaying=NO;
@@ -76,17 +89,12 @@ FreeFall *freeFallController;
 		}
 	}
 	
-	- (void)doStopFallPlay:(NSTimer *)timer{
-		fallSoundPlaying=NO;
-	}
-	
-	- (void)doStopStopPlay:(NSTimer *)timer{
-		stopSoundPlaying=NO;
-	}
-	
 	- (void)enableTimer:(NSTimer *)timer{
-		timed=[NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateAccelData:) userInfo:nil repeats:YES];
+		_freeFallExecuteTimer=[NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateAccelData:) userInfo:nil repeats:YES];
 	}
+	
+	- (void)doStopFallPlay:(NSTimer *)timer{ fallSoundPlaying=NO; }	
+	- (void)doStopStopPlay:(NSTimer *)timer{ stopSoundPlaying=NO; }
 	
 @end
 	

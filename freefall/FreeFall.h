@@ -4,7 +4,8 @@
 	CMMotionManager *manager;
 	bool fallSoundPlaying;
 	bool stopSoundPlaying;
-	NSTimer *timed;
+	NSTimer *_freeFallExecuteTimer;
+	int _ringerStateToken;
 }
 	
 	@property (nonatomic,retain) NSDictionary *prefs;
@@ -12,4 +13,5 @@
 	-(void)updateAccelData:(NSTimer *)timer;
 	-(void)doStopFallPlay:(NSTimer *)timer;
 	-(void)doStopStopPlay:(NSTimer *)timer;
+	- (void)updateState;
 @end
