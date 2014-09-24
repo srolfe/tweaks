@@ -104,7 +104,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Custom sounds can be placed in /Library/FreeFall</string>
+			<string>Sounds can be placed in /Library/FreeFall</string>
 		</dict>
 		<dict>
 			<key>cell</key>
