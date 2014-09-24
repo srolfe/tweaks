@@ -7,8 +7,10 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Free-Fall Sound</string>
 			<key>footerText</key>
-			<string>Sounds located in /Library/FreeFall</string>
+			<string>Fall detection sensitivity</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -34,6 +36,32 @@
 		</dict>
 		<dict>
 			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>min</key>
+			<string>0.00</string>
+			<key>max</key>
+			<string>0.10</string>
+			<key>showValue</key>
+			<true/>
+			<key>default</key>
+			<string>0.04</string>
+			<key>defaults</key>
+			<string>com.chewmieser.freefall</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.freefall.prefs-changed</string>
+			<key>key</key>
+			<string>fallingSensitivity</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>After free-fall sound</string>
+			<key>footerText</key>
+			<string>End free-fall sensitivity</string>
+		</dict>
+		<dict>
+			<key>cell</key>
 			<string>PSLinkListCell</string>
 			<key>default</key>
 			<string>None</string>
@@ -54,8 +82,44 @@
 			<key>set</key>
 			<string>previewAndSet:forSpecifier:</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>min</key>
+			<string>5.0</string>
+			<key>max</key>
+			<string>9.8</string>
+			<key>showValue</key>
+			<true/>
+			<key>default</key>
+			<string>6.0</string>
+			<key>defaults</key>
+			<string>com.chewmieser.freefall</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.freefall.prefs-changed</string>
+			<key>key</key>
+			<string>stoppingSensitivity</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Custom sounds can be placed in /Library/FreeFall</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>label</key>
+			<string>Idea by Randall Munroe</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>label</key>
+			<string>Created by Steve Rolfe (Chewmieser)</string>
+		</dict>
 	</array>
 	<key>title</key>
-	<string>FreeFallPrefs</string>
+	<string>FreeFall</string>
 </dict>
 </plist>

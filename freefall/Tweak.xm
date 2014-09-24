@@ -32,6 +32,9 @@ FreeFall *freeFallController;
 		
 		prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.chewmieser.freefall.plist"];
 		
+		fallSensitivity=[[[self prefs] objectForKey:@"fallingSensitivity"] doubleValue] ?: 0.04;
+		stopSensitivity=[[[self prefs] objectForKey:@"stoppingSensitivity"] doubleValue] ?: 6.0;
+		
 		// Setup falling sound
 		NSString *fallPref=[[self prefs] objectForKey:@"fallingSound"];
 		if (fallPref==nil) fallPref=@"WilhelmScream.wav";
@@ -76,13 +79,13 @@ FreeFall *freeFallController;
 	- (void)updateAccelData:(NSTimer *)timer{
 		double accel=sqrt(pow(manager.accelerometerData.acceleration.x,2) + pow(manager.accelerometerData.acceleration.y,2) + pow(manager.accelerometerData.acceleration.z,2));
 		
-		if (accel<0.04 && !fallSoundPlaying){ // Original was 8.0
+		if (accel<fallSensitivity && !fallSoundPlaying){ // Original was 8.0
 			fallSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopFallPlay:) userInfo:nil repeats:NO];
 			AudioServicesPlaySystemSound(fallingSound);
 		}
 		
-		if (accel>6.0 && !stopSoundPlaying){ // Original was 8.0
+		if (accel>stopSensitivity && !stopSoundPlaying){ // Original was 8.0
 			stopSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopStopPlay:) userInfo:nil repeats:NO];
 			AudioServicesPlaySystemSound(stoppingSound);

@@ -6,6 +6,8 @@
 	bool stopSoundPlaying;
 	NSTimer *_freeFallExecuteTimer;
 	int _ringerStateToken;
+	double fallSensitivity;
+	double stopSensitivity;
 }
 	
 	@property (nonatomic,retain) NSDictionary *prefs;
