@@ -1,4 +1,5 @@
 // Bare-bones PSListController header... It compiles, shut up!
+#import <UIKit/UIKit.h>
 @interface PSListController: UIViewController{
 	NSArray *_specifiers;
 }
