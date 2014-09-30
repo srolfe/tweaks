@@ -6,6 +6,8 @@
 // Reference to our FreeFall object
 FreeFall *freeFallController;
 
+bool falling;
+
 @implementation FreeFall
 	@synthesize prefs;
 	
@@ -82,10 +84,12 @@ FreeFall *freeFallController;
 		if (accel<fallSensitivity && !fallSoundPlaying){ // Original was 8.0
 			fallSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopFallPlay:) userInfo:nil repeats:NO];
+            falling=YES;
+            [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(dontLetStopPlay:) userInfo:nil repeats:NO];
 			AudioServicesPlaySystemSound(fallingSound);
 		}
 		
-		if (accel>stopSensitivity && !stopSoundPlaying){ // Original was 8.0
+		if (accel>stopSensitivity && !stopSoundPlaying && falling){ // Original was 8.0
 			stopSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopStopPlay:) userInfo:nil repeats:NO];
 			AudioServicesPlaySystemSound(stoppingSound);
@@ -98,6 +102,7 @@ FreeFall *freeFallController;
 	
 	- (void)doStopFallPlay:(NSTimer *)timer{ fallSoundPlaying=NO; }	
 	- (void)doStopStopPlay:(NSTimer *)timer{ stopSoundPlaying=NO; }
+    - (void)dontLetStopPlay:(NSTimer *)timer{ falling=NO; }
 	
 @end
 	
