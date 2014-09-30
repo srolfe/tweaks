@@ -6,8 +6,6 @@
 // Reference to our FreeFall object
 FreeFall *freeFallController;
 
-bool falling;
-
 @implementation FreeFall
 	@synthesize prefs;
 	
@@ -27,13 +25,13 @@ bool falling;
 	
 	// Did receive preference reload notification
 	- (void)loadPrefs{
+		// Destroy the world
 		if (prefs) [[self prefs] release];
-		
 		AudioServicesDisposeSystemSoundID(fallingSound);
 		AudioServicesDisposeSystemSoundID(stoppingSound);
 		
+		// Load preferences
 		prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.chewmieser.freefall.plist"];
-		
 		fallSensitivity=[[[self prefs] objectForKey:@"fallingSensitivity"] doubleValue] ?: 0.04;
 		stopSensitivity=[[[self prefs] objectForKey:@"stoppingSensitivity"] doubleValue] ?: 6.0;
 		
@@ -53,13 +51,16 @@ bool falling;
 			AudioServicesCreateSystemSoundID((CFURLRef)[NSURL fileURLWithPath:[NSString stringWithFormat:@"/Library/FreeFall/%@",stopPref]],&stoppingSound);
 		}
 		
+		// Setup timer
 		[self updateState];
 	}
 	
 	- (void)updateState{
+		// Destroy objects
 		if (_freeFallExecuteTimer!=nil){[_freeFallExecuteTimer invalidate]; _freeFallExecuteTimer=nil;}
 		if (manager) [manager stopAccelerometerUpdates];
 		
+		// Silent switch toggle
 		uint64_t state;
 		
 		// Are we completely disabled?
@@ -79,9 +80,11 @@ bool falling;
 	}
 	
 	- (void)updateAccelData:(NSTimer *)timer{
+		// Calculate acceleration
 		double accel=sqrt(pow(manager.accelerometerData.acceleration.x,2) + pow(manager.accelerometerData.acceleration.y,2) + pow(manager.accelerometerData.acceleration.z,2));
 		
-		if (accel<fallSensitivity && !fallSoundPlaying){ // Original was 8.0
+		// Handle falling
+		if (accel<fallSensitivity && !fallSoundPlaying){
 			fallSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopFallPlay:) userInfo:nil repeats:NO];
             falling=YES;
@@ -89,7 +92,8 @@ bool falling;
 			AudioServicesPlaySystemSound(fallingSound);
 		}
 		
-		if (accel>stopSensitivity && !stopSoundPlaying && falling){ // Original was 8.0
+		// Handle stopping
+		if (accel>stopSensitivity && !stopSoundPlaying && falling){
 			stopSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopStopPlay:) userInfo:nil repeats:NO];
 			AudioServicesPlaySystemSound(stoppingSound);

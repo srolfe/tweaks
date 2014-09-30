@@ -8,6 +8,7 @@
 	int _ringerStateToken;
 	double fallSensitivity;
 	double stopSensitivity;
+	bool falling;
 }
 	
 	@property (nonatomic,retain) NSDictionary *prefs;

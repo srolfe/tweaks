@@ -1,6 +1,4 @@
 export ARCHS = armv7 armv7s arm64
-export TARGET := iphone:clang
-THEOS_BUILD_DIR = Packages
 
 include theos/makefiles/common.mk
 
