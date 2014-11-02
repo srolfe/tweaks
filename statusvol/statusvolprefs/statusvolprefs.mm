@@ -149,7 +149,8 @@ enum cType{
 		[prefs setObject:[tmp propertyForKey:@"value"] forKey:@"statusvol.mask"];
 		
 		// Save it to defaults
-		NSData *data = [NSPropertyListSerialization dataFromPropertyList:prefs format:NSPropertyListBinaryFormat_v1_0 errorDescription:nil];
+		NSData *data = [NSPropertyListSerialization dataWithPropertyList:prefs format:NSPropertyListBinaryFormat_v1_0 options:0 error:nil];
+		//NSData *data = [NSPropertyListSerialization dataFromPropertyList:prefs format:NSPropertyListBinaryFormat_v1_0 errorDescription:nil];
 		[data writeToFile:@"/var/mobile/Library/Preferences/com.chewmieser.statusvol.plist" atomically:YES];
 		
 		// Notify

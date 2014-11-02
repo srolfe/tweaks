@@ -9,6 +9,8 @@
 	double fallSensitivity;
 	double stopSensitivity;
 	bool falling;
+	NSString *stopPref;
+	NSString *fallPref;
 }
 	
 	@property (nonatomic,retain) NSDictionary *prefs;

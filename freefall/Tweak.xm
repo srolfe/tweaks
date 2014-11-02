@@ -36,7 +36,7 @@ FreeFall *freeFallController;
 		stopSensitivity=[[[self prefs] objectForKey:@"stoppingSensitivity"] doubleValue] ?: 6.0;
 		
 		// Setup falling sound
-		NSString *fallPref=[[self prefs] objectForKey:@"fallingSound"];
+		fallPref=[[self prefs] objectForKey:@"fallingSound"];
 		if (fallPref==nil) fallPref=@"WilhelmScream.wav";
 		
 		if (![fallPref isEqualToString:@"None"]){
@@ -44,7 +44,7 @@ FreeFall *freeFallController;
 		}
 		
 		// Setup stopping sound
-		NSString *stopPref=[[self prefs] objectForKey:@"stoppingSound"];
+		stopPref=[[self prefs] objectForKey:@"stoppingSound"];
 		if (stopPref==nil) stopPref=@"None";
 		
 		if (![stopPref isEqualToString:@"None"]){
@@ -85,18 +85,19 @@ FreeFall *freeFallController;
 		
 		// Handle falling
 		if (accel<fallSensitivity && !fallSoundPlaying){
+			falling=YES;
+			[NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(dontLetStopPlay:) userInfo:nil repeats:NO];
 			fallSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopFallPlay:) userInfo:nil repeats:NO];
-            falling=YES;
-            [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(dontLetStopPlay:) userInfo:nil repeats:NO];
-			AudioServicesPlaySystemSound(fallingSound);
+			
+			if (![fallPref isEqualToString:@"None"]) AudioServicesPlaySystemSound(fallingSound);
 		}
 		
 		// Handle stopping
 		if (accel>stopSensitivity && !stopSoundPlaying && falling){
 			stopSoundPlaying=YES;
 			[NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(doStopStopPlay:) userInfo:nil repeats:NO];
-			AudioServicesPlaySystemSound(stoppingSound);
+			if (![stopPref isEqualToString:@"None"]) AudioServicesPlaySystemSound(stoppingSound);
 		}
 	}
 	
