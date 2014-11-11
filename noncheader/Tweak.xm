@@ -8,15 +8,16 @@
 	- (void)layoutSubviews{
 		%orig;
 		
-		// Record frames
-		CGRect newFrame=self.frame;
-		CGRect newBounds=self.bounds;
-		
 		// _clearButton seems to be an easy reference to determine which page we're on
 		// Also noticed a "hasClear" variable, but that doesn't seem used
 		
 		// Refuse manipulation if we're not on the today page
 		if (MSHookIvar<id>(self,"_clearButton")==nil){
+			// Record frames
+			CGRect newFrame=self.frame;
+			CGRect newBounds=self.bounds;
+			
+			// Change heights
 			newFrame.size.height=0;
 			newBounds.size.height=0;
 			
