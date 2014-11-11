@@ -1,0 +1,9 @@
+Package: com.chewmieser.noncheader
+Name: noNCheader
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Hides notification center widget headers
+Maintainer: Steven Rolfe
+Author: Steven Rolfe
+Section: Tweaks

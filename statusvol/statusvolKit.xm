@@ -1,51 +1,32 @@
 #import "statusvolKit.h"
+#import "rocketbootstrap.h"
 
-%hook UIApplication
-	- (void)applicationDidFinishLaunching:(id)arg1{
-		%orig;
-		[self applicationState];
-	}
+@interface CPDistributedMessagingCenter : NSObject
+	+(id)centerNamed:(id)arg1;
+	-(void)runServerOnCurrentThread;
+	-(void)registerForMessageName:(id)arg1 target:(id)arg2 selector:(SEL)arg3;
+	-(void)sendMessageName:(id)arg1 userInfo:(id)arg2;
+@end
 	
-	- (void)_reportAppLaunchFinished{
-		%orig;
-		[self applicationState];
-	}
-	
-	- (void)applicationWillEnterForeground:(id)arg1{
-		%orig;
-		[self applicationState];
-	}
-	
-	- (void)_sendWillEnterForegroundCallbacks{
-		%orig;
-		[self applicationState];
-	}
-	
-	- (long long)applicationState{
-		UIApplicationState state=%orig;
-		if (state == UIApplicationStateActive){
-			// If there's a HUD, ignore this event
-			NSArray *windows=self.windows;
-			
-			BOOL flag=NO;
-			for (UIWindow *win in windows){
-				if ([win isKindOfClass:[objc_getClass("SBHUDWindow") class]]){
-					flag=YES;
-				}
-			}
-			
-			if (flag==NO){
-				// Get style
-				long style=(long)[self statusBarStyle];
-			
-				// Push out notification
-				if (style!=0 && style!=300){
-					CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.chewmieser.statusvol.gotWhite"), NULL, NULL, false);
-				}else{
-					CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.chewmieser.statusvol.gotBlack"), NULL, NULL, false);
-				}
-			}
-		}
-		return state;
+/*%hook UIStatusBarForegroundView
+	- (UIStatusBarForegroundStyleAttributes *)foregroundStyle{
+		UIStatusBarForegroundStyleAttributes *tmp=%orig;
+		
+		// Get color & bundle
+		UIColor *tintColor=[tmp tintColor];
+		CGFloat white, alpha;
+		[tintColor getWhite:&white alpha:&alpha];
+		//[tintColor release];
+		
+		//NSDictionary *userInfo=;
+		
+		// Push notification
+		//CPDistributedMessagingCenter *c = [%c(CPDistributedMessagingCenter) centerNamed:@"com.chewmieser.statusvol"];
+		//rocketbootstrap_distributedmessagingcenter_apply(c);
+		//[c sendMessageName:@"colorChange" userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[[NSBundle mainBundle] bundleIdentifier],@"bundle",[NSString stringWithFormat:@"%f",white],@"color",nil]];
+		//[c release];
+		
+		return tmp;
 	}
 %end
+	*/

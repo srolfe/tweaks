@@ -2,7 +2,7 @@
 #import <substrate.h>
 
 @interface UIStatusBarForegroundStyleAttributes
-	- (id)tintColor;
+	- (UIColor *)tintColor;
 @end
 
 @interface UIStatusBarForegroundView

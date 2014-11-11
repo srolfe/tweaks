@@ -7,6 +7,8 @@ statusvol_FILES = statusvol.xm
 statusvolKit_FILES = statusvolKit.xm
 statusvol_FRAMEWORKS = UIKit QuartzCore CoreGraphics
 statusvolKit_FRAMEWORKS = UIKit
+statusvol_LIBRARIES = rocketbootstrap
+statusvolKit_LIBRARIES = rocketbootstrap
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 

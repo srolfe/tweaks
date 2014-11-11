@@ -1,9 +1,86 @@
 #import "statusvol.h"
+#import "rocketbootstrap.h"
 #import <QuartzCore/QuartzCore.h>
 
 statusvol *svol;
 UIInterfaceOrientation orient;
 UIColor *statusStyle;
+NSString *topBundle;
+
+@interface CPDistributedMessagingCenter : NSObject
+	+(id)centerNamed:(id)arg1;
+	-(void)runServerOnCurrentThread;
+	-(void)registerForMessageName:(id)arg1 target:(id)arg2 selector:(SEL)arg3;
+@end
+
+@interface SBApplication{
+	id _stateSettings;
+}
+
+	-(NSInteger)statusBarStyle;
+	-(id)_appInfo;
+	-(id)bundleIdentifier;
+	-(id)mainScene;
+	@property(nonatomic,copy) id _stateSettings;
+@end
+
+@interface SpringBoard : UIApplication
+	- (SBApplication *)_accessibilityFrontMostApplication;
+	- (UIStatusBar *)statusBar;
+@end
+
+@interface UIStatusBarForegroundStyleAttributes
+	- (UIColor *)tintColor;
+@end
+
+@interface UIStatusBarForegroundView
+	-(UIStatusBarForegroundStyleAttributes *)foregroundStyle;
+@end
+
+@interface UIStatusBar{
+	UIStatusBarForegroundView *_foregroundView;
+}
+	-(UIColor *)foregroundColor;
+@end
+
+@interface SBStateSettings
+	- (id)objectForStateSetting:(unsigned int)arg1;
+@end
+
+/*%hook SBStateSettings
+	- (id)objectForStateSetting:(unsigned int)arg1{
+		// 18 = windowID
+		
+		id tmp=%orig;
+		NSLog(@"!--- ObjectFor %u for %@ and %@",arg1,tmp,self);
+		return tmp;
+	}
+	- (void)setObject:(id)arg1 forStateSetting:(unsigned int)arg2{
+		%orig;
+		NSLog(@"!--- Set Object %@ for %u and %@",arg1,arg2,self);
+	}
+%end*/
+
+// Fun
+/*%hook SpringBoard
+	
+	// Record top-level app for statusbar notifications
+	- (void)frontDisplayDidChange:(id)arg1{
+		%orig;
+		
+		SBApplication *tmp=[self _accessibilityFrontMostApplication];
+		
+		[[((SpringBoard *)[UIApplication sharedApplication]) _accessibilityFrontMostApplication] statusBarStyle];
+		
+		if (tmp!=nil){
+			topBundle=[tmp bundleIdentifier];
+			NSLog(@"!--- Got style: %@ %ld",topBundle,(long)[tmp statusBarStyle]);
+		}else{
+			topBundle=@"SpringBoard";
+		}
+	}
+	
+%end*/
 
 // Logs when orientation changes to orient
 %hook SBUIController
@@ -156,6 +233,34 @@ UIColor *statusStyle;
 			CGFloat white;
 			[statusStyle getWhite:&white alpha:nil];
 			
+			//[[((SpringBoard *)[UIApplication sharedApplication]) _accessibilityFrontMostApplication] statusBarStyle];
+			SpringBoard *spring=(SpringBoard *)[UIApplication sharedApplication];
+			SBApplication *topApp=[spring _accessibilityFrontMostApplication];
+			
+			if (topApp!=nil){
+				SBStateSettings *state=[topApp _stateSettings];
+				id windowId=[state objectForStateSetting:18];
+				NSLog(@"!-- Did pull state setting: %@",windowId);
+				
+				
+				/*NSLog(@"!-- Found color: %d",(int)[topApp statusBarStyle]);
+				
+				int sstyle=(int)[topApp statusBarStyle];
+				white=(sstyle==2);
+				//_shouldTintStatusBar
+				
+				// Black: (300) 300 0
+				// White: 2
+				*/
+			}else{
+				// statusbar -> foregroundview -> foregroundstyle
+				UIStatusBar *springStatus=[spring statusBar];
+				UIStatusBarForegroundView *springForeground=MSHookIvar<UIStatusBarForegroundView *>(springStatus,"_foregroundView");
+				UIStatusBarForegroundStyleAttributes *springForegroundStyle=[springForeground foregroundStyle];
+				UIColor *tintColor=[springForegroundStyle tintColor];
+				[tintColor getWhite:&white alpha:nil];
+			}
+			
 			UIImage *volImage;
 			if (white>0.5){
 				volImage=[svol imageForState:currentStep withMode:@"light"];
@@ -187,14 +292,22 @@ UIColor *statusStyle;
 			
 			// Load our preferences
 			[self loadPrefs];
+			[self registerNotifications];
 		}
 		
 		return self;
 	}
 	
-	// Did receive white color
-	- (void)didReceiveNotification:(NSNotification *)notification{
-		statusStyle=[notification object];
+	- (void)registerNotifications{
+		/*CPDistributedMessagingCenter *c = [objc_getClass("CPDistributedMessagingCenter") centerNamed:@"com.chewmieser.statusvol"];
+		rocketbootstrap_distributedmessagingcenter_apply(c);
+		[c runServerOnCurrentThread];
+		[c registerForMessageName:@"colorChange" target:self selector:@selector(handleMessageNamed:withUserInfo:)];*/
+	}
+	
+	- (NSDictionary *)handleMessageNamed:(NSString *)messageName withUserInfo:(NSDictionary *)userInfo{
+		NSLog(@"!-- Did receive notification: %@ %@",messageName,userInfo);
+		return nil;
 	}
 	
 	// Did receive preference reload notification
@@ -211,10 +324,12 @@ UIColor *statusStyle;
 		return ([[self prefs] objectForKey:@"statusvol.enabled"]==nil || [[[self prefs] objectForKey:@"statusvol.enabled"] intValue]==YES);
 	}
 	
+	// Support disabling time-teardown (for statusbar tweaks)
 	- (BOOL)timeTeardownEnabled{
 		return ([[self prefs] objectForKey:@"statusvol.timeEnabled"]==nil || [[[self prefs] objectForKey:@"statusvol.timeEnabled"] intValue]==YES);
 	}
 	
+	// Get the proper image for the current color and state & cache it
 	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode{
 		// Default on circled
 		NSString *skinName=[[self prefs] objectForKey:@"statusvol.mask"];
@@ -237,28 +352,19 @@ UIColor *statusStyle;
 	
 @end
 
+// Act on the notifications
 static void PreferencesChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
 	[svol loadPrefs];
 }
 
-// Only way to reliably get these messages...
-static void GotWhite(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
-	[svol didUpdateColor:[UIColor whiteColor]];
-}
-
-static void GotBlack(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo){
-	[svol didUpdateColor:[UIColor blackColor]];
-}
-
-// Set things up	
-__attribute__((constructor)) static void init() {
+// Set things up
+%ctor {
 	svol=[[statusvol alloc] init];
-	[[NSNotificationCenter defaultCenter] addObserver:svol selector:@selector(didReceiveNotification:) name:@"statusvol_NNC" object:nil];
 	
 	// Handle preference changes
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvol.prefs-changed"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvol.prefs-changed"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
 	
 	// Handle color events
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotWhite, CFSTR("com.chewmieser.statusvol.gotWhite"), NULL, CFNotificationSuspensionBehaviorCoalesce);
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotBlack, CFSTR("com.chewmieser.statusvol.gotBlack"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	/*CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotWhite, CFSTR("statusvol.gotWhite"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotBlack, CFSTR("statusvol.gotBlack"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);*/
 }

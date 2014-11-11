@@ -9,7 +9,6 @@
 // StatusVol Object
 @interface statusvol : NSObject
 	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode;
-	- (void)didReceiveNotification:(NSNotification *)notification;
 	- (void)loadPrefs;
 	- (BOOL)timeTeardownEnabled;
 	- (BOOL)isEnabled;
