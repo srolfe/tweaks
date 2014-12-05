@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SVLSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>DisableBackground</string>
+			<key>label</key>
+			<string>Disable Background</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SVLSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>HideTime</string>
+			<key>label</key>
+			<string>Hide Time</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Legacy Options</string>
+</dict>
+</plist>

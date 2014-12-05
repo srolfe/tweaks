@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Animation Duration</string>
+			<key>footerText</key>
+			<string>Slide in/out speed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>SVLSliderTableCell</string>
+			<key>default</key>
+			<string>0.25</string>
+			<key>min</key>
+			<string>0.00</string>
+			<key>max</key>
+			<string>2.00</string>
+			<key>showValue</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>AnimationDuration</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Sticky Duration</string>
+			<key>footerText</key>
+			<string>Duration StatusVol remains sticky after changing volume</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>SVLSliderTableCell</string>
+			<key>default</key>
+			<string>2.0</string>
+			<key>min</key>
+			<string>0.0</string>
+			<key>max</key>
+			<string>5.0</string>
+			<key>showValue</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>StickyDuration</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Animation Options</string>
+</dict>
+</plist>

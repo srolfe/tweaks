@@ -1,32 +1,30 @@
 #import "statusvolKit.h"
-#import "rocketbootstrap.h"
+#import <objcipc/objcipc.h>
 
-@interface CPDistributedMessagingCenter : NSObject
-	+(id)centerNamed:(id)arg1;
-	-(void)runServerOnCurrentThread;
-	-(void)registerForMessageName:(id)arg1 target:(id)arg2 selector:(SEL)arg3;
-	-(void)sendMessageName:(id)arg1 userInfo:(id)arg2;
-@end
-	
-/*%hook UIStatusBarForegroundView
+%hook UIStatusBarForegroundView
 	- (UIStatusBarForegroundStyleAttributes *)foregroundStyle{
 		UIStatusBarForegroundStyleAttributes *tmp=%orig;
 		
 		// Get color & bundle
 		UIColor *tintColor=[tmp tintColor];
-		CGFloat white, alpha;
-		[tintColor getWhite:&white alpha:&alpha];
-		//[tintColor release];
-		
-		//NSDictionary *userInfo=;
-		
-		// Push notification
-		//CPDistributedMessagingCenter *c = [%c(CPDistributedMessagingCenter) centerNamed:@"com.chewmieser.statusvol"];
-		//rocketbootstrap_distributedmessagingcenter_apply(c);
-		//[c sendMessageName:@"colorChange" userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[[NSBundle mainBundle] bundleIdentifier],@"bundle",[NSString stringWithFormat:@"%f",white],@"color",nil]];
-		//[c release];
+		//CGFloat white, alpha;
+		//[tintColor getWhite:&white alpha:&alpha];
+		if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.springboard"]){
+			[OBJCIPC sendMessageToSpringBoardWithMessageName:@"statusVol.didGetColor" dictionary:@{ @"bundle": [[NSBundle mainBundle] bundleIdentifier], @"color" : tintColor } replyHandler:^(NSDictionary *response) {
+			}];
+		}
 		
 		return tmp;
 	}
+	
+	- (void)stopIgnoringData:(BOOL)arg1{
+		[self foregroundStyle];
+		%orig;
+	}
+	
+	- (void)setStatusBarData:(id)arg1 actions:(int)arg2 animated:(BOOL)arg3{
+		[self foregroundStyle];
+		%orig;
+	}
+	
 %end
-	*/

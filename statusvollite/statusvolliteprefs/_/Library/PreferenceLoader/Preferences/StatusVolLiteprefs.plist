@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = StatusVolLiteprefs;
+		cell = PSLinkCell;
+		detail = "StatusVolLiteprefsListController";
+		icon = "statusvollite.png";
+		isController = 1;
+		label = "StatusVol 2";
+	};
+}

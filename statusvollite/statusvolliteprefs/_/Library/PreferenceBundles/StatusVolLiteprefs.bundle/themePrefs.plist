@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SVLSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>InvertColors</string>
+			<key>label</key>
+			<string>Invert Colors</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SVLSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>UseSquares</string>
+			<key>label</key>
+			<string>Use Squares</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SVLSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.chewmieser.statusvollite</string>
+			<key>key</key>
+			<string>HideIcons</string>
+			<key>label</key>
+			<string>Hide Icons</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Theme Options</string>
+</dict>
+</plist>

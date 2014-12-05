@@ -8,7 +8,9 @@
 
 // StatusVol Object
 @interface statusvol : NSObject
+	- (void)recordColor:(NSDictionary *)message;
 	- (UIImage *)imageForState:(int)state withMode:(NSString *)mode;
+	- (UIImage *)imageForState:(int)state;
 	- (void)loadPrefs;
 	- (BOOL)timeTeardownEnabled;
 	- (BOOL)isEnabled;
@@ -16,6 +18,8 @@
 	
 	@property (nonatomic,retain) NSDictionary *prefs;
 	@property (nonatomic,retain) NSDictionary *skin;
+	@property (nonatomic,retain) UIColor *statusColor;
+	@property (nonatomic,retain) NSMutableDictionary *statusColors;
 @end
 
 // Time cloaking functionality

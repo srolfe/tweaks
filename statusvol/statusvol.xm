@@ -1,5 +1,5 @@
 #import "statusvol.h"
-#import "rocketbootstrap.h"
+#import <objcipc/objcipc.h>
 #import <QuartzCore/QuartzCore.h>
 
 statusvol *svol;
@@ -46,41 +46,6 @@ NSString *topBundle;
 @interface SBStateSettings
 	- (id)objectForStateSetting:(unsigned int)arg1;
 @end
-
-/*%hook SBStateSettings
-	- (id)objectForStateSetting:(unsigned int)arg1{
-		// 18 = windowID
-		
-		id tmp=%orig;
-		NSLog(@"!--- ObjectFor %u for %@ and %@",arg1,tmp,self);
-		return tmp;
-	}
-	- (void)setObject:(id)arg1 forStateSetting:(unsigned int)arg2{
-		%orig;
-		NSLog(@"!--- Set Object %@ for %u and %@",arg1,arg2,self);
-	}
-%end*/
-
-// Fun
-/*%hook SpringBoard
-	
-	// Record top-level app for statusbar notifications
-	- (void)frontDisplayDidChange:(id)arg1{
-		%orig;
-		
-		SBApplication *tmp=[self _accessibilityFrontMostApplication];
-		
-		[[((SpringBoard *)[UIApplication sharedApplication]) _accessibilityFrontMostApplication] statusBarStyle];
-		
-		if (tmp!=nil){
-			topBundle=[tmp bundleIdentifier];
-			NSLog(@"!--- Got style: %@ %ld",topBundle,(long)[tmp statusBarStyle]);
-		}else{
-			topBundle=@"SpringBoard";
-		}
-	}
-	
-%end*/
 
 // Logs when orientation changes to orient
 %hook SBUIController
@@ -230,43 +195,7 @@ NSString *topBundle;
 			
 			[arg1 setFrame:CGRectMake(arg1.frame.origin.x, arg1.frame.origin.y, arg1.frame.size.width, 20.0)];
 			
-			CGFloat white;
-			[statusStyle getWhite:&white alpha:nil];
-			
-			//[[((SpringBoard *)[UIApplication sharedApplication]) _accessibilityFrontMostApplication] statusBarStyle];
-			SpringBoard *spring=(SpringBoard *)[UIApplication sharedApplication];
-			SBApplication *topApp=[spring _accessibilityFrontMostApplication];
-			
-			if (topApp!=nil){
-				SBStateSettings *state=[topApp _stateSettings];
-				id windowId=[state objectForStateSetting:18];
-				NSLog(@"!-- Did pull state setting: %@",windowId);
-				
-				
-				/*NSLog(@"!-- Found color: %d",(int)[topApp statusBarStyle]);
-				
-				int sstyle=(int)[topApp statusBarStyle];
-				white=(sstyle==2);
-				//_shouldTintStatusBar
-				
-				// Black: (300) 300 0
-				// White: 2
-				*/
-			}else{
-				// statusbar -> foregroundview -> foregroundstyle
-				UIStatusBar *springStatus=[spring statusBar];
-				UIStatusBarForegroundView *springForeground=MSHookIvar<UIStatusBarForegroundView *>(springStatus,"_foregroundView");
-				UIStatusBarForegroundStyleAttributes *springForegroundStyle=[springForeground foregroundStyle];
-				UIColor *tintColor=[springForegroundStyle tintColor];
-				[tintColor getWhite:&white alpha:nil];
-			}
-			
-			UIImage *volImage;
-			if (white>0.5){
-				volImage=[svol imageForState:currentStep withMode:@"light"];
-			}else{
-				volImage=[svol imageForState:currentStep withMode:@"dark"];
-			}
+			UIImage *volImage=[svol imageForState:currentStep];
 			
 			[arg1.layer setContentsGravity:kCAGravityResizeAspect];//kCAGravityResizeAspectFill];
 			[arg1.layer setContents:(id)volImage.CGImage];
@@ -290,19 +219,20 @@ NSString *topBundle;
 			// Setup skin store
 			self.skin=[[NSDictionary alloc] initWithObjectsAndKeys:[[NSMutableDictionary alloc] init],@"light",[[NSMutableDictionary alloc] init],@"dark",nil];
 			
+			self.statusColors=[[NSMutableDictionary alloc] init];
+			
 			// Load our preferences
 			[self loadPrefs];
-			[self registerNotifications];
+			//[self setupNotifications];
 		}
 		
 		return self;
 	}
 	
-	- (void)registerNotifications{
-		/*CPDistributedMessagingCenter *c = [objc_getClass("CPDistributedMessagingCenter") centerNamed:@"com.chewmieser.statusvol"];
-		rocketbootstrap_distributedmessagingcenter_apply(c);
-		[c runServerOnCurrentThread];
-		[c registerForMessageName:@"colorChange" target:self selector:@selector(handleMessageNamed:withUserInfo:)];*/
+	- (void)recordColor:(NSDictionary *)message{
+		[self.statusColors setObject:[message objectForKey:@"color"] forKey:[message objectForKey:@"bundle"]];
+		
+		NSLog(@"!--- Did get! %@",self.statusColors);
 	}
 	
 	- (NSDictionary *)handleMessageNamed:(NSString *)messageName withUserInfo:(NSDictionary *)userInfo{
@@ -346,6 +276,39 @@ NSString *topBundle;
 	
 	}
 	
+	// Get the proper image for the current color and state & cache it
+	- (UIImage *)imageForState:(int)state{
+		// Figure out the proper color:
+		SpringBoard *spring=(SpringBoard *)[UIApplication sharedApplication];
+		SBApplication *topApp=[spring _accessibilityFrontMostApplication];
+		
+		UIColor *sColor;
+		
+		// We're in an application
+		if (topApp!=nil){
+			NSString *bun=[topApp bundleIdentifier];
+			sColor=(UIColor *)[self.statusColors objectForKey:bun];
+			if (sColor==nil) sColor=[UIColor blackColor];
+		}else{
+			// Inside SpringBoard
+			UIStatusBar *springStatus=[spring statusBar];
+			UIStatusBarForegroundView *springForeground=MSHookIvar<UIStatusBarForegroundView *>(springStatus,"_foregroundView");
+			UIStatusBarForegroundStyleAttributes *springForegroundStyle=[springForeground foregroundStyle];
+			sColor=[springForegroundStyle tintColor];
+		}
+		
+		NSLog(@"!--- sColor: %@",self.statusColors);
+		
+		// We've got the color, now get the mode
+		CGFloat white;
+		[sColor getWhite:&white alpha:nil];
+		if (white>0.5){
+			return [self imageForState:state withMode:@"light"];
+		}else{
+			return [self imageForState:state withMode:@"dark"];
+		}
+	}
+	
 	- (void)didUpdateColor:(UIColor *)color{
 		statusStyle=color;
 	}
@@ -363,6 +326,11 @@ static void PreferencesChanged(CFNotificationCenterRef center, void *observer, C
 	
 	// Handle preference changes
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvol.prefs-changed"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+	
+	[OBJCIPC registerIncomingMessageFromAppHandlerForMessageName:@"statusVol.didGetColor"  handler:^NSDictionary *(NSDictionary *message) {
+		[svol recordColor:message];
+	    return nil;
+	}];
 	
 	// Handle color events
 	/*CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, GotWhite, CFSTR("statusvol.gotWhite"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
