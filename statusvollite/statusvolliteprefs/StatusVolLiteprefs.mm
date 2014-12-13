@@ -9,7 +9,7 @@
 @implementation StatusVolLiteprefsListController
 - (id)specifiers {
 	if(_specifiers == nil) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"StatusVolLiteprefs" target:self] retain];
+		_specifiers = [self loadSpecifiersFromPlistName:@"StatusVolLiteprefs" target:self]; //retain];
 	}
 	
 	return _specifiers;

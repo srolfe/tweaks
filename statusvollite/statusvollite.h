@@ -1,3 +1,7 @@
+@interface UIView (ColorOfPoint)
+- (UIColor *) colorOfPoint:(CGPoint)point;
+@end
+
 @interface UIVisualEffectView (ex)
 	- (void)_setEffect:(id)arg1;
 @end
@@ -10,7 +14,43 @@
 	- (void)sendEUVolumeLimitAcknowledgementIfNecessary;
 @end
 
+@interface UIScreen (svolPrivate)
+	- (id)snapshot;
+	- (id)snapshotView;
+	- (id)snapshotViewAfterScreenUpdates:(BOOL)arg1;
+	
+	- (void)_enumerateWindowsWithBlock:( void ( ^ )( id ) )arg1;
+	- (id)_snapshotExcludingWindows:(id)arg1 withRect:(struct CGRect)arg2;
+@end
+
 @interface SpringBoard : UIApplication
+	- (id)_accessibilityFrontMostApplication;
+	- (id)_keyWindowForScreen:(id)arg1;
+@end
+
+@interface _UIReplicantView : UIView
+@end
+
+// THIS
+@interface SBApplication
+	- (id)mainSceneID;
+	- (id)mainScene;
+	
+	- (id)transitionContext;
+	- (id)executionContext;
+	
+	- (id)_screenFromSceneID:(id)arg1;
+	
+	- (id)_defaultPNGNameFromSuspensionSettings;
+	
+	- (id)_defaultPNGForSceneID:(id)arg1 size:(struct CGSize)arg2 scale:(double)arg3 launchingOrientation:(long long)arg4 orientation:(long long *)arg5;
+	
+	- (id)_snapshotImageWithImageName:(id)arg1 sceneID:(id)arg2 size:(struct CGSize)arg3 scale:(double)arg4 downscaled:(_Bool)arg5 launchingOrientation:(long long)arg6 originalOrientation:(long long *)arg7 currentOrientation:(long long *)arg8;
+	- (id)_snapshotImageInfoForSceneID:(id)arg1 named:(id)arg2 size:(struct CGSize)arg3 scale:(double)arg4 downscaled:(_Bool)arg5 launchingOrientation:(long long)arg6;
+	- (id)_snapshotImageInfoForSceneID:(id)arg1 size:(struct CGSize)arg2 scale:(double)arg3 downscaled:(_Bool)arg4 launchingOrientation:(long long)arg5;
+	- (id)_snapshotImageForSnapshotImageInfo:(id)arg1 downscaled:(_Bool)arg2 originalOrientation:(out long long *)arg3 currentOrientation:(out long long *)arg4;
+	
+	- (void)_saveSnapshotForSceneID:(id)arg1 frame:(struct CGRect)arg2 name:(id)arg3 overrideScale:(double)arg4;
 @end
 
 @interface SpringBoard (svol)
@@ -27,7 +67,7 @@
 @interface svolWindow : UIWindow
 	- (void)fixSvolWindow;
 @end
-	
+
 @interface _UIBackdropView : UIView
 	- (id)initWithFrame:(struct CGRect)arg1 autosizesToFitSuperview:(BOOL)arg2 settings:(id)arg3;
 	-(void)setAutosizesToFitSuperview:(BOOL)arg1;
@@ -57,4 +97,21 @@
 	+ (id)sharedInstanceForStyle:(int)arg1;
 	- (void)setSecondaryColor:(id)arg1;
 	- (void)setPrimaryColor:(id)arg1;
+@end
+	
+@interface StatusVol : NSObject{
+	UILabel *indicatorLabel;
+	UIVisualEffectView *blurView;
+	UIViewController *primaryVC;
+	_UIBackdropView *back;
+	NSTimer *hideTimer;
+	svolWindow *sVolWindow;
+	NSDictionary *preferences;
+	bool isAnimatingClose;
+	bool svolCloseInterrupt;
+}
+	- (id)init;
+	- (void)initializeWindow;
+	- (void)_updateSvolLabel:(int)level type:(int)type;
+	- (void)hideSvolWindow;
 @end

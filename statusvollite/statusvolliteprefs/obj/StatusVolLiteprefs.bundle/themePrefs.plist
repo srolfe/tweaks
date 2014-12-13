@@ -17,6 +17,8 @@
 			<false/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>UseSquares</string>
 			<key>label</key>
@@ -31,6 +33,8 @@
 			<false/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>HideIcons</string>
 			<key>label</key>
@@ -51,6 +55,8 @@
 			<false/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>InvertColors</string>
 			<key>label</key>
@@ -65,10 +71,14 @@
 			<false/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>DynamicColors</string>
+			<key>enabled</key>
+			<string>NO</string>
 			<key>label</key>
-			<string>DynamicColors</string>
+			<string>Dynamic Colors</string>
 		</dict>
 	</array>
 	<key>title</key>

@@ -36,7 +36,7 @@
 			NSLayoutConstraint *topConstraint=[NSLayoutConstraint constraintWithItem:_label attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTop multiplier:1.0 constant:0.0];
 			[self addConstraints:[NSArray arrayWithObjects:leftConstraint,rightConstraint,bottomConstraint,topConstraint,nil]];
 			
-			[_label release];
+			//[_label release];
 		}
 		return self;
 	}

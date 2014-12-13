@@ -6,7 +6,7 @@
 @implementation animationListController
 	- (id)specifiers {
 		if(_specifiers == nil) {
-			_specifiers = [[self loadSpecifiersFromPlistName:@"animatePrefs" target:self] retain];
+			_specifiers = [self loadSpecifiersFromPlistName:@"animatePrefs" target:self];// retain];
 		}
 		return _specifiers;
 	}

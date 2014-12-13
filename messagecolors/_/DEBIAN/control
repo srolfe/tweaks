@@ -1,0 +1,11 @@
+Package: com.chewmieser.messagecolors
+Name: messageColors
+Depends: mobilesubstrate
+Architecture: iphoneos-arm
+Description: Customize MobileSMS bubble colors.
+Maintainer: Steven Rolfe
+Author: Steven Rolfe
+Section: Tweaks
+Depiction: http://apt.steverolfe.com/depiction/messagecolors.html
+Version: 0.5.1-13
+Installed-Size: 636

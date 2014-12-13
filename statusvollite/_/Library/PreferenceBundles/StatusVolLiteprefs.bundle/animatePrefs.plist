@@ -27,6 +27,8 @@
 			<true/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>AnimationDuration</string>
 		</dict>
@@ -44,7 +46,7 @@
 			<key>cellClass</key>
 			<string>SVLSliderTableCell</string>
 			<key>default</key>
-			<string>2.0</string>
+			<string>1.0</string>
 			<key>min</key>
 			<string>0.0</string>
 			<key>max</key>
@@ -53,6 +55,8 @@
 			<true/>
 			<key>defaults</key>
 			<string>com.chewmieser.statusvollite</string>
+			<key>PostNotification</key>
+			<string>com.chewmieser.statusvollite.prefs-changed</string>
 			<key>key</key>
 			<string>StickyDuration</string>
 		</dict>

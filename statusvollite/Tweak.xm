@@ -1,17 +1,50 @@
 #import <AudioToolbox/AudioServices.h> // Temporary fix for silent mode vibrate support
+#import <QuartzCore/QuartzCore.h>
 #import "statusvollite.h"
 
 // Global vars
-// Most of these should make their way inside SpringBoard / svolWindow eventually
-UILabel *indicatorLabel;
-UIVisualEffectView *blurView;
-UIViewController *primaryVC;
-_UIBackdropView *back;
-NSTimer *hideTimer=nil;
-svolWindow *sVolWindow;
+StatusVol *svol;
 bool sVolIsVisible=NO;
-//_UILegibilityLabel *tmpLabel;
 
+// Force hide silent switch HUD - would prefer a better solution here
+%hook SBRingerHUDController
+	+ (void)activate:(int)arg1{
+		[svol _updateSvolLabel:17+arg1 type:1];
+	}
+%end
+
+
+// frontMostApplication -> SBApplication -> screenFromSceneID?
+
+// Hook volume change events
+%hook VolumeControl
+	- (void)_changeVolumeBy:(float)arg1{
+		%orig;
+		
+		int theMode=MSHookIvar<int>(self,"_mode");
+		
+		if (theMode==0){
+			[svol _updateSvolLabel:[self getMediaVolume]*16 type:0];
+		}else{
+			[svol _updateSvolLabel:[self volume]*16 type:1];
+		}
+	}
+	
+	// Force HUDs hidden
+	- (_Bool)_HUDIsDisplayableForCategory:(id)arg1{return NO;}
+	- (_Bool)_isCategoryAlwaysHidden:(id)arg1{return YES;}
+%end
+
+%hook SpringBoard
+	- (void)applicationDidFinishLaunching:(id)arg1{
+		%orig;
+		
+		// Create StatusVol inside SpringBoard
+		svol=[[StatusVol alloc] init];
+	}
+%end
+
+// StatusVol needs an auto-rotating UIWindow
 @implementation svolWindow
 	// Un-hide after rotation
 	- (void)_finishedFullRotation:(id)arg1 finished:(id)arg2 context:(id)arg3{
@@ -49,42 +82,78 @@ bool sVolIsVisible=NO;
 	
 	// Force support auto-rotation. Hide on rotation events
 	- (BOOL)_shouldAutorotateToInterfaceOrientation:(int)arg1{
-		[self setHidden:YES];
+		[self setHidden:YES]; // Mitigate black box issue
 		return YES;
 	}
 @end
+	
+@implementation UIView (ColorOfPoint)
 
-// Force hide silent switch HUD - would prefer a better solution here
-%hook SBRingerHUDController
-	+ (void)activate:(int)arg1{
-		[((SpringBoard *)[UIApplication sharedApplication]) _updateSvolLabel:17+arg1 type:1];
-	}
-%end
+- (UIColor *) colorOfPoint:(CGPoint)point
+{
+    unsigned char pixel[4] = {0};
 
-// Hook volume change events
-%hook VolumeControl
-	- (void)_changeVolumeBy:(float)arg1{
-		%orig;
-		
-		int theMode=MSHookIvar<int>(self,"_mode");
-		
-		if (theMode==0){
-			[((SpringBoard *)[UIApplication sharedApplication]) _updateSvolLabel:[self getMediaVolume]*16 type:0];
-		}else{
-			[((SpringBoard *)[UIApplication sharedApplication]) _updateSvolLabel:[self volume]*16 type:1];
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+
+    CGContextRef context = CGBitmapContextCreate(pixel, 1, 1, 8, 4, colorSpace, kCGBitmapAlphaInfoMask & kCGImageAlphaPremultipliedLast);
+
+    CGContextTranslateCTM(context, -point.x, -point.y);
+
+    [self.layer renderInContext:context];
+
+    CGContextRelease(context);
+    CGColorSpaceRelease(colorSpace);
+
+    //NSLog(@"pixel: %d %d %d %d", pixel[0], pixel[1], pixel[2], pixel[3]);
+
+    UIColor *color = [UIColor colorWithRed:pixel[0]/255.0 green:pixel[1]/255.0 blue:pixel[2]/255.0 alpha:pixel[3]/255.0];
+
+    return color;
+}
+@end
+	
+@implementation StatusVol
+	- (id)init{
+		self=[super init];
+		if (self){
+			preferences=[[NSDictionary alloc] init];
+			isAnimatingClose=NO;
+			svolCloseInterrupt=NO;
+			
+			[self loadPreferences];
+			[self initializeWindow];
+			
+			hideTimer=nil;
 		}
+		return self;
 	}
 	
-	// Force HUDs hidden
-	- (_Bool)_HUDIsDisplayableForCategory:(id)arg1{return NO;}
-	- (_Bool)_isCategoryAlwaysHidden:(id)arg1{return YES;}
-%end
-
-%hook SpringBoard
-	// Setup UIWindow
-	- (void)applicationDidFinishLaunching:(id)arg1{
-		%orig;
+	- (void)loadPreferences{
+		NSMutableDictionary *tmpPrefs;
 		
+		CFStringRef appID=CFSTR("com.chewmieser.statusvollite");
+		CFArrayRef keyList=CFPreferencesCopyKeyList(appID,kCFPreferencesCurrentUser,kCFPreferencesAnyHost);
+		if (!keyList){
+			tmpPrefs=[[NSMutableDictionary alloc] init];
+		}else{
+			tmpPrefs=(__bridge NSMutableDictionary *)CFPreferencesCopyMultiple(keyList,appID,kCFPreferencesCurrentUser,kCFPreferencesAnyHost);
+			CFRelease(keyList);
+		}
+		
+		// Add missing prefs
+		if ([tmpPrefs objectForKey:@"UseSquares"]==nil) [tmpPrefs setObject:@"0" forKey:@"UseSquares"];
+		if ([tmpPrefs objectForKey:@"HideIcons"]==nil) [tmpPrefs setObject:@"0" forKey:@"HideIcons"];
+		if ([tmpPrefs objectForKey:@"InvertColors"]==nil) [tmpPrefs setObject:@"0" forKey:@"InvertColors"];
+		if ([tmpPrefs objectForKey:@"DynamicColors"]==nil) [tmpPrefs setObject:@"0" forKey:@"DynamicColors"];
+		if ([tmpPrefs objectForKey:@"DisableBackground"]==nil) [tmpPrefs setObject:@"0" forKey:@"DisableBackground"];
+		if ([tmpPrefs objectForKey:@"HideTime"]==nil) [tmpPrefs setObject:@"0" forKey:@"HideTime"];
+		if ([tmpPrefs objectForKey:@"AnimationDuration"]==nil) [tmpPrefs setObject:@"0.25" forKey:@"AnimationDuration"];
+		if ([tmpPrefs objectForKey:@"StickyDuration"]==nil) [tmpPrefs setObject:@"1.0" forKey:@"StickyDuration"];
+		
+		preferences=[tmpPrefs copy];
+	}
+	
+	- (void)initializeWindow{
 		// Setup window
 		CGRect mainFrame=[UIApplication sharedApplication].keyWindow.frame;
 		mainFrame.origin.x=0;
@@ -92,7 +161,7 @@ bool sVolIsVisible=NO;
 		mainFrame.size.height=20;
 		sVolWindow=[[svolWindow alloc] initWithFrame:mainFrame];
 		if ([sVolWindow respondsToSelector:@selector(_setSecure:)]) [sVolWindow _setSecure:YES];
-		sVolWindow.windowLevel=1058;//UIWindowLevelStatusBar+1;
+		sVolWindow.windowLevel=1058;
 		
 		mainFrame.origin.y=0;
 		
@@ -100,7 +169,7 @@ bool sVolIsVisible=NO;
 		primaryVC=[[UIViewController alloc] init];
 		[primaryVC.view setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
 		
-		// Blur view //!UIAccessibilityIsReduceTransparencyEnabled()
+		// Blur view
 		if ([%c(UIBlurEffect) class]){
 			UIBlurEffect *blurEffect=[%c(UIBlurEffect) effectWithStyle:UIBlurEffectStyleDark];
 			blurView=[[%c(UIVisualEffectView) alloc] initWithEffect:blurEffect];
@@ -114,34 +183,6 @@ bool sVolIsVisible=NO;
 			[back setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
 			[primaryVC.view addSubview:back];
 		}
-		
-		// STR: 0.3
-		
-		// Primary: 1,1
-		// Secondary: 1 0.45
-		// shadowAlpha: 1
-		// shadowColor: 0,1
-		// shadowCompostingFilterName: darkenSourceOver
-		// shadowRadius: 12
-		// style: 1
-		
-		/*_UILegibilitySettings *legSettings=[%c(_UILegibilitySettings) sharedInstanceForStyle:1];
-		tmpLabel=[[%c(_UILegibilityLabel) alloc] initWithSettings:legSettings strength:126443839488.000000 string:@"Zebra" font:[UIFont systemFontOfSize:14] options:0];
-		[[blurView contentView] addSubview:tmpLabel];*/
-		
-		// -- Etc
-		/*CGRect iconRect=CGRectMake(0,0,20,20);	
-		UIGraphicsBeginImageContextWithOptions(iconRect.size,false,0.0);
-		UIGraphicsGetCurrentContext();
-		[@"🔕" drawAtPoint:CGPointMake(0,0) withAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIColor whiteColor],NSForegroundColorAttributeName,[UIFont systemFontOfSize:12],NSFontAttributeName,nil]];
-		UIImage *tmp=UIGraphicsGetImageFromCurrentImageContext();
-		tmp=[tmp imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-		UIGraphicsEndImageContext();
-		
-		UIImageView *imView=[[UIImageView alloc] initWithImage:tmp];
-		imView.tintColor=[UIColor whiteColor];
-		[imView setFrame:CGRectMake(0,0,30,30)];
-		[primaryVC.view addSubview:imView];*/
 		
 		// Label
 		indicatorLabel=[[UILabel alloc] initWithFrame:mainFrame];
@@ -160,43 +201,79 @@ bool sVolIsVisible=NO;
 		[sVolWindow setHidden:YES];
 	}
 	
-	// Re-set string + handle hiding
-	%new(@v:d)
 	- (void)_updateSvolLabel:(int)level type:(int)type{
 		NSMutableString *timeString=[[NSMutableString alloc] init];
 		
-		// Sync and load preferences - there's probably a nicer way to do this... It just slowly evolved into craziness...
-		CFPreferencesAppSynchronize(CFSTR("com.chewmieser.statusvollite"));
+		// Test SB Hook
+		SpringBoard *SB=(SpringBoard *)[UIApplication sharedApplication];
+		SBApplication *SBA=(SBApplication *)[SB _accessibilityFrontMostApplication];
+		UIScreen *tmpScreen=(UIScreen *)[SBA _screenFromSceneID:[SBA mainSceneID]];
+		UIWindow *tmp=(UIWindow *)[SB _keyWindowForScreen:tmpScreen];
 		
-		// > Theming options
-		NSNumber *invertColorsSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("InvertColors"), CFSTR("com.chewmieser.statusvollite")));
-		if (invertColorsSwitch==nil) invertColorsSwitch=[NSNumber numberWithInt:0];
-		NSNumber *useSquaresSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("UseSquares"), CFSTR("com.chewmieser.statusvollite")));
-		if (useSquaresSwitch==nil) useSquaresSwitch=[NSNumber numberWithInt:0];
-		NSNumber *hideIconsSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("HideIcons"), CFSTR("com.chewmieser.statusvollite")));
-		if (hideIconsSwitch==nil) hideIconsSwitch=[NSNumber numberWithInt:0];
-		NSNumber *dynamicColorsSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("DynamicColors"), CFSTR("com.chewmieser.statusvollite")));
-		if (dynamicColorsSwitch==nil) dynamicColorsSwitch=[NSNumber numberWithInt:0];
+		CGRect screenRect = [[UIScreen mainScreen] bounds];
+		UIGraphicsBeginImageContext(screenRect.size);
+		CGContextRef ctx = UIGraphicsGetCurrentContext();
+		//[[UIColor blackColor] set];
+		//CGContextFillRect(ctx, screenRect);
+		[tmp.layer renderInContext:ctx];
+		UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+		UIGraphicsEndImageContext();
+		UIImageWriteToSavedPhotosAlbum(newImage, nil, nil, nil);
 		
-		// > Animation options
-		NSNumber *animationDuration=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("AnimationDuration"), CFSTR("com.chewmieser.statusvollite")));
-		if (animationDuration==nil) animationDuration=[NSNumber numberWithFloat:0.25];
-		NSNumber *stickyDuration=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("StickyDuration"), CFSTR("com.chewmieser.statusvollite")));
-		if (stickyDuration==nil) stickyDuration=[NSNumber numberWithFloat:2.0];
+		NSLog(@"!-- keyWindow: %@",tmp);
+		//- (id)_keyWindowForScreen:(id)arg1;
 		
-		// > Legacy options
-		NSNumber *disableBackgroundSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("DisableBackground"), CFSTR("com.chewmieser.statusvollite")));
-		if (disableBackgroundSwitch==nil) disableBackgroundSwitch=[NSNumber numberWithInt:0];
-		NSNumber *hideTimeSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("HideTime"), CFSTR("com.chewmieser.statusvollite")));
-		if (hideTimeSwitch==nil) hideTimeSwitch=[NSNumber numberWithInt:0];
 		
-		if ([invertColorsSwitch intValue]==1){
+		/*[tmpScreen _enumerateWindowsWithBlock:^(id tmp){
+			NSLog(@"!-- Win: %@",tmp);
+		}];*/
+		
+		
+		// - (void)_enumerateWindowsWithBlock:( void ( ^ )( id ) )arg1;
+		
+		//_UIReplicantView *replicant=(_UIReplicantView *)[tmpScreen snapshot];
+		
+	    /*CGRect screenRect = [[UIScreen mainScreen] bounds];
+		UIGraphicsBeginImageContext(screenRect.size);
+		CGContextRef ctx = UIGraphicsGetCurrentContext();
+		//[[UIColor blackColor] set];
+		//CGContextFillRect(ctx, screenRect);
+		[replicant.layer renderInContext:ctx];
+		UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+		UIGraphicsEndImageContext();
+		UIImageWriteToSavedPhotosAlbum(newImage, nil, nil, nil);*/
+		
+		// UIApplicationAutomaticSnapshotDefault
+		// - (id)_snapshotImageWithImageName:(id)arg1 sceneID:(id)arg2 size:(struct CGSize)arg3 scale:(double)arg4 downscaled:(_Bool)arg5 launchingOrientation:(long long)arg6 originalOrientation:(long long *)arg7 currentOrientation:(long long *)arg8;
+		
+		//long long ggg;
+		//id tmp=[SBA _snapshotImageWithImageName:@"UIApplicationAutomaticSnapshotDefault" sceneID:[SBA mainSceneID] size:CGSizeMake(100,100) scale:1.0 downscaled:NO launchingOrientation:0 originalOrientation:&ggg currentOrientation:&ggg];
+		
+		//NSLog(@"!-- OMG %@",tmp);
+		
+		/*UIScreen *tmpScreen=(UIScreen *)[SBA _screenFromSceneID:[SBA mainSceneID]];
+		id tmp=[tmpScreen _snapshotExcludingWindows:nil withRect:CGRectMake(0,0,100,100)];
+		NSLog(@"!--- omg: %@",tmp);*/
+		
+		
+		//- (id)_defaultPNGForSceneID:(id)arg1 size:(struct CGSize)arg2 scale:(double)arg3 launchingOrientation:(long long)arg4 orientation:(long long *)arg5;
+		//- (id)_snapshotExcludingWindows:(id)arg1 withRect:(struct CGRect)arg2;
+		
+		//_enumerateWindowsWithBlock
+		
+		/*UIView *tmp=(UIView *)[tmpScreen snapshotViewAfterScreenUpdates:NO];
+		
+		NSLog(@"!--- theImage: %@",[tmp colorOfPoint:CGPointMake(5,5)]);*/
+		
+		//NSLog(@"!-- KWFS: %@",[SB _keyWindowForScreen:[UIScreen mainScreen]]);
+		
+		if ([[preferences objectForKey:@"InvertColors"] intValue]==1){
 			[indicatorLabel setTextColor:[UIColor blackColor]];
 		
-			if ([%c(UIBlurEffect) class]){
+			if ([%c(UIBlurEffect) class]){ // iOS8
 				UIBlurEffect *blurEffect=[%c(UIBlurEffect) effectWithStyle:UIBlurEffectStyleExtraLight];
 				[blurView _setEffect:blurEffect];
-			}else{
+			}else{ // iOS7
 				[back removeFromSuperview];
 				back=[[%c(_UIBackdropView) alloc] initWithStyle:0];
 				[back setAutosizesToFitSuperview:NO];
@@ -207,10 +284,10 @@ bool sVolIsVisible=NO;
 		}else{
 			[indicatorLabel setTextColor:[UIColor whiteColor]];
 		
-			if ([%c(UIBlurEffect) class]){
+			if ([%c(UIBlurEffect) class]){ // iOS8
 				UIBlurEffect *blurEffect=[%c(UIBlurEffect) effectWithStyle:UIBlurEffectStyleDark];
 				[blurView _setEffect:blurEffect];
-			}else{
+			}else{ // iOS7
 				[back removeFromSuperview];
 				back=[[%c(_UIBackdropView) alloc] initWithStyle:1];
 				[back setAutosizesToFitSuperview:NO];
@@ -220,7 +297,7 @@ bool sVolIsVisible=NO;
 			}
 		}
 		
-		if ([disableBackgroundSwitch intValue]==1){
+		if ([[preferences objectForKey:@"DisableBackground"] intValue]==1){
 			[back setAlpha:0.0];
 			[blurView setAlpha:0.0];
 		}else{
@@ -228,22 +305,9 @@ bool sVolIsVisible=NO;
 			[blurView setAlpha:1.0];
 		}
 		
-		if ([hideTimeSwitch intValue]==1){
+		if ([[preferences objectForKey:@"HideTime"] intValue]==1){
 			[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:NO crossfade:NO crossfadeDuration:0];
 		}
-		
-		// Make icons
-		/*let colorRect=CGRectMake(0.0, 0.0, 20.0, 20.0)
-        UIGraphicsBeginImageContextWithOptions(colorRect.size, false, 0.0)
-        let colorContext=UIGraphicsGetCurrentContext();
-        UIBezierPath(ovalInRect: colorRect).addClip()
-        CGContextSetFillColorWithColor(colorContext, UIColor.blackColor().CGColor);
-        CGContextFillRect(colorContext, colorRect);
-        let colorImage=UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-
-        return colorImage
-		*/
 		
 		// Silent switch
 		if (level==17){
@@ -254,7 +318,7 @@ bool sVolIsVisible=NO;
 			if (level==18) level=[[%c(VolumeControl) sharedVolumeControl] volume]*16;
 			
 			// Icons for system vs media volume - if enabled
-			if ([hideIconsSwitch intValue]==0){
+			if ([[preferences objectForKey:@"HideIcons"] intValue]==0){
 				if (type==0){
 					[timeString appendString:@"♫  "];
 				}else{
@@ -264,7 +328,7 @@ bool sVolIsVisible=NO;
 			
 			// Make level into string - circles or squares?
 			for (int i=0;i<level;i++){
-				if ([useSquaresSwitch intValue]==0){
+				if ([[preferences objectForKey:@"UseSquares"] intValue]==0){
 					[timeString appendString:@"⚫︎"];
 				}else{
 					[timeString appendString:@"◾︎"];//@"■"];
@@ -272,7 +336,7 @@ bool sVolIsVisible=NO;
 			}
 			
 			for (int i=0;i<(16-level);i++){
-				if ([useSquaresSwitch intValue]==0){
+				if ([[preferences objectForKey:@"UseSquares"] intValue]==0){
 					[timeString appendString:@"⚪︎"];
 				}else{
 					[timeString appendString:@"◽︎"];//@"□"];
@@ -282,18 +346,22 @@ bool sVolIsVisible=NO;
 		
 		// Fix kerning with circles
 		NSMutableAttributedString *attributedString=[[NSMutableAttributedString alloc] initWithString:timeString];
-		if ([useSquaresSwitch intValue]==0) [attributedString addAttribute:NSKernAttributeName value:[NSNumber numberWithFloat:-2.0] range:NSMakeRange(0, [timeString length])];
+		if ([[preferences objectForKey:@"UseSquares"] intValue]==0) [attributedString addAttribute:NSKernAttributeName value:[NSNumber numberWithFloat:-2.0] range:NSMakeRange(0, [timeString length])];
 		[indicatorLabel setAttributedText:attributedString];
 		
 		// Show and set hide timer
-		if (!sVolIsVisible){
+		if (!sVolIsVisible || isAnimatingClose){
 			// Window adjustments
-			[sVolWindow fixSvolWindow];
-			sVolIsVisible=YES;
-			[sVolWindow setHidden:NO];
+			if (!isAnimatingClose){
+				[sVolWindow fixSvolWindow];
+				sVolIsVisible=YES;
+				[sVolWindow setHidden:NO];
+			}else{
+				svolCloseInterrupt=YES;
+			}
 			
 			// Animate entry
-			[UIView animateWithDuration:[animationDuration floatValue] animations:^{
+			[UIView animateWithDuration:[[preferences objectForKey:@"AnimationDuration"] floatValue] delay:nil options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
 				CGRect windowRect=sVolWindow.frame;
 				
 				// Animation dependent on orientation
@@ -306,30 +374,26 @@ bool sVolIsVisible=NO;
 				}
 				
 				[sVolWindow setFrame:windowRect];
+			} completion:^(BOOL finished){
+				// Reset the timer
+				svolCloseInterrupt=NO;
+				if (hideTimer!=nil) {[hideTimer invalidate]; hideTimer=nil;}
+				hideTimer=[NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"StickyDuration"] floatValue] target:self selector:@selector(hideSvolWindow) userInfo:nil repeats:NO];
 			}];
+		}else{
+			// Reset the timer
+			if (hideTimer!=nil) {[hideTimer invalidate]; hideTimer=nil;}
+			hideTimer=[NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"StickyDuration"] floatValue] target:self selector:@selector(hideSvolWindow) userInfo:nil repeats:NO];
 		}
-		
-		// Reset the timer
-		if (hideTimer!=nil) {[hideTimer invalidate]; hideTimer=nil;}
-		hideTimer=[NSTimer scheduledTimerWithTimeInterval:[stickyDuration floatValue] target:self selector:@selector(hideSvolWindow) userInfo:nil repeats:NO];
 	}
 	
-	// Handle animations and hiding of the window
-	%new(@v:v)
 	- (void)hideSvolWindow{
 		// Unset hide timer
 		hideTimer=nil;
 		
-		// Sync and load animation duration preference
-		CFPreferencesAppSynchronize(CFSTR("com.chewmieser.statusvollite"));
-		NSNumber *animationDuration=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("AnimationDuration"), CFSTR("com.chewmieser.statusvollite")));
-		if (animationDuration==nil) animationDuration=[NSNumber numberWithFloat:0.25];
-		
-		NSNumber *hideTimeSwitch=(NSNumber *)((CFNumberRef)CFPreferencesCopyAppValue(CFSTR("HideTime"), CFSTR("com.chewmieser.statusvollite")));
-		if (hideTimeSwitch==nil) hideTimeSwitch=[NSNumber numberWithInt:0];
-		
 		// Animate hide
-		[UIView animateWithDuration:[animationDuration floatValue] animations:^{
+		[UIView animateWithDuration:[[preferences objectForKey:@"AnimationDuration"] floatValue] delay:0 options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
+			isAnimatingClose=YES;
 			CGRect windowRect=sVolWindow.frame;
 			
 			// Animation dependent on orientation
@@ -344,27 +408,29 @@ bool sVolIsVisible=NO;
 			[sVolWindow setFrame:windowRect];
 		} completion:^(BOOL finished){
 			// Hide the window
-			sVolIsVisible=NO;
-			[sVolWindow setHidden:YES];
+			isAnimatingClose=NO;
 			
-			if ([hideTimeSwitch intValue]==1){
-				[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:YES crossfade:NO crossfadeDuration:0];
+			if (finished && !svolCloseInterrupt){
+				sVolIsVisible=NO;
+				[sVolWindow setHidden:YES];
+			
+				if ([[preferences objectForKey:@"HideTime"] intValue]==1){
+					[[objc_getClass("SBMainStatusBarStateProvider") sharedInstance] enableTime:YES crossfade:NO crossfadeDuration:0];
+				}
 			}
 		}];
 	}
-%end
 	
-/*static void PreferencesChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	[preferences release];
-	CFStringRef appID = CFSTR("com.my.tweak");
-	CFArrayRef keyList = CFPreferencesCopyKeyList(appID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	if (!keyList) {
-		NSLog(@"There's been an error getting the key list!");
-		return;
+@end
+	
+static void PreferencesChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	if (svol!=nil) [svol loadPreferences];
+}
+
+%ctor{
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChanged, CFSTR("com.chewmieser.statusvollite.prefs-changed"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+	
+	if (access("/var/lib/dpkg/info/com.chewmieser.statusvollite.list",F_OK)==-1){
+		NSLog(@"[StatusVol 2] This package came from");
 	}
-	preferences = (NSDictionary *)CFPreferencesCopyMultiple(keyList, appID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	if (!preferences) {
-		NSLog(@"There's been an error getting the preferences dictionary!");
-	}
-	CFRelease(keyList);
-}*/
+}

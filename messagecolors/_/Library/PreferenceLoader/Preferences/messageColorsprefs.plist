@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = messageColorsprefs;
+		cell = PSLinkCell;
+		detail = "messageColorsprefsListController";
+		icon = "messageColorsprefs.png";
+		isController = 1;
+		label = messageColors;
+	};
+}
